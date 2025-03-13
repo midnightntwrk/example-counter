@@ -43,7 +43,7 @@ The [contract](contract) subdirectory contains:
 - the [smart contract](contract/src/counter.compact) itself
 - some [unit tests](contract/src/test/counter.test.ts) for it
 
-### Source code
+### The source code
 
 The contract contains a declaration of state stored publicly on the blockchain:
 
