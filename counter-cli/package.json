@@ -11,7 +11,6 @@
     "testnet-local": "node --experimental-specifier-resolution=node dist/testnet-local.js",
     "standalone": "docker compose -f standalone.yml pull && node --experimental-specifier-resolution=node dist/standalone.js",
     "test-api": "docker compose -f standalone.yml pull && DEBUG='testcontainers' NODE_OPTIONS='--experimental-vm-modules --max-old-space-size=8192' jest --passWithNoTests --detectOpenHandles --forceExit -c jest.api.config.ts",
-    "test-e2e": "docker compose -f standalone.yml pull && DEBUG='testcontainers' NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --detectOpenHandles --forceExit -c jest.e2e.config.ts",
     "build": "rm -rf dist && tsc --project tsconfig.build.json && cp -r ../contract/src/ dist/contract/src",
     "lint": "eslint src",
     "compile-contract": "$COMPACT_PATH ../contract/src/counter.compact ./dist/contract/src/managed/counter",
