@@ -29,7 +29,7 @@
     "@midnight-ntwrk/wallet": "^3.7.5",
     "@midnight-ntwrk/wallet-api": "^3.5.0",
     "@midnight-ntwrk/zswap": "^3.0.6",
-    "pino": "^8.16.1",
+    "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "ws": "^8.14.2"
   },
