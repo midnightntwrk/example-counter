@@ -23,17 +23,11 @@ The [contract](contract) subdirectory contains:
 
 The contract contains a declaration of state stored publicly on the blockchain:
 
-```compact
-export ledger round: Counter;
-```
+https://github.com/midnightntwrk/example-counter/blob/fa30d89decae31aebe9b970b3f8b9748cfd54ad8/contract/src/counter.compact#L6
 
 and a single transition function to change this state:
 
-```compact
-export circuit increment(): [] {
-  round.increment(1);
-}
-```
+https://github.com/midnightntwrk/example-counter/blob/fa30d89decae31aebe9b970b3f8b9748cfd54ad8/contract/src/counter.compact#L9-L11
 
 To see how you could verify how your smart contract runs,
 there exist unit tests in `/contract/src/test/counter.test.ts`.
