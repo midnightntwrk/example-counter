@@ -13,6 +13,8 @@ yarn-error.log*
 logs
 *.log
 logs/*.log
+midnight-level-db
+coverage
 
 # Dependency directories
 jspm_packages/

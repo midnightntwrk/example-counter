@@ -5,8 +5,6 @@ on:
     branches: [ '**' ]
   push:
     branches: [ 'main' ]
-    tags:
-    - '*'
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
@@ -70,14 +68,10 @@ jobs:
           fi
 
       - name: Checkmarx One CLI Action
-        uses: checkmarx/ast-github-action@86e9ae570a811f9a1fb85903647a307aa3bf6253 #2.0.44
+        uses: checkmarx/ast-github-action@07d0cdab94ff40a963b419e4d72e80d8ff684b46 #2.0.46
         with:
           cx_tenant: ${{ secrets.CX_TENANT }}
           base_uri: https://eu-2.ast.checkmarx.net/
           cx_client_id: ${{ secrets.CX_CLIENT_ID }}
           cx_client_secret: ${{ secrets.CX_CLIENT_SECRET_EU }}
-          
-          # Threshold values may need to be adjusted periodically 
-          # additional_params: --report-format sarif --output-path . --threshold "sast-high=0;sca-high=0;sca-medium=0;apis-high=0;apis-medium=0;ioc-high=0;ioc-medium=0"
-          
-          additional_params: --scs-repo-url https://github.com/midnightntwrk/counter-template/ --scs-repo-token ${{ secrets.MIDNIGHTCI_REPO }} --report-format sarif --output-path .
+          additional_params: --scs-repo-url https://github.com/midnightntwrk/example-counter --scs-repo-token ${{ secrets.MIDNIGHTCI_REPO }}
