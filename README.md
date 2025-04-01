@@ -24,16 +24,14 @@ The [contract](contract) subdirectory contains:
 The contract contains a declaration of state stored publicly on the blockchain:
 
 ```compact
-ledger {
-  round: Counter;
-}
+export ledger round: Counter;
 ```
 
 and a single transition function to change this state:
 
 ```compact
-export circuit increment(): Void {
-  ledger.round.increment(1);
+export circuit increment(): [] {
+  round.increment(1);
 }
 ```
 
