@@ -30,18 +30,7 @@ const config: Config.InitialOptions = {
     ['jest-junit', { outputDirectory: 'reports', outputName: 'report.xml' }],
     ['jest-html-reporters', { publicPath: 'reports', filename: 'report.html' }],
     ['jest-gh-md-reporter', { publicPath: 'reports', filename: 'test-report.md' }],
-  ],
-  testEnvironment: 'allure-jest/node',
-  testEnvironmentOptions: {
-    resultsDir: './reports/allure-results',
-    links: [
-      {
-        type: 'tms',
-        urlTemplate: 'https://input-output.atlassian.net/browse/%s',
-      },
-    ],
-  },
-  setupFilesAfterEnv: ['<rootDir>/src/test/jest.setup.ts'],
+  ]
 };
 
 export default config;

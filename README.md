@@ -8,7 +8,7 @@
 1. You must have NodeJS version 22 installed.
 2. Download the Compact compiler, create a directory in which to place it, unzip the file in that directory, and export the following environment variable to point to it:
    ```sh
-   export COMPACT_HOME=~/work/midnight/testnet-compact
+   export COMPACT_PATH=~/work/midnight/testnet-compact
    ```
    Use the your own correct path depending on your setup.
 
