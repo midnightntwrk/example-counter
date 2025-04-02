@@ -44,11 +44,6 @@ describe('API', () => {
   });
 
   it('should deploy the contract and increment the counter [@slow]', async () => {
-    allure.description(`Deploys the counter contract, increments it, and verifies the responses.`);
-    allure.tms('PM-8552', 'PM-8552');
-    allure.severity('blocker');
-    allure.tag('counter');
-
     const counterContract = await api.deploy(providers);
     expect(counterContract).not.toBeNull();
 
