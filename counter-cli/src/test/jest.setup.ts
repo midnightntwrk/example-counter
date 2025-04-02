@@ -13,9 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type AllureJestApi } from 'allure-jest/dist/AllureJestApi';
-
 // for allure annotations
 declare global {
-  const allure: AllureJestApi;
+  const allure: {
+    description: (description: string) => void;
+    severity: (severity: string) => void;
+    tag: (tag: string) => void;
+    tms: (tmsId: string, tmsName?: string) => void;
+  };
 }
+
+export {};
