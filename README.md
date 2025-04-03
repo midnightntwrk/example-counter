@@ -6,11 +6,11 @@
 ## Prerequisites
 
 1. You must have NodeJS version 22 installed.
-2. Download the Compact compiler, create a directory in which to place it, unzip the file in that directory, and export the following environment variable to point to it:
+2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact), create a directory for the compiler executables, and unzip the downloaded file in that directory.  Add that directory to your shell's path.  For example, if you unzipped the Compact compiler in `$HOME/bin/compactc`:
    ```sh
-   export COMPACT_PATH=~/work/midnight/testnet-compact
+   export PATH=$PATH:$HOME/bin/compactc
    ```
-   Use the your own correct path depending on your setup.
+   Use the your own path to the compiler.
 
 ## The counter contract
 
@@ -38,11 +38,11 @@ export circuit increment(): Void {
 ```
 
 To see how you could verify how your smart contract runs,
-there exist unit tests in `/contract/src/test/counter.test.ts`.
+there exist unit tests in `contract/src/test/counter.test.ts`.
 
 They use a simple simulator that illustrate
 how to initialize and call smart contract code locally without running a node:
-`examples/counter/contract/src/test/counter-simulator.ts`
+`contract/src/test/counter-simulator.ts`
 
 ### Building the smart contract
 
@@ -59,15 +59,16 @@ how to initialize and call smart contract code locally without running a node:
    npm run compact
    ```
 
-   > If this doesn't work, you need to export the current path to the Compact compiler to your console with `export COMPACT_PATH="/path/to/compactc"`
-
-   You should see output from the Compact compiler with some details about generated circuits:
+   You should see output from npm and the Compact compiler:
 
    ```sh
-   increment: Uses around 2^5 out of 2^20 constraints (rounded up to the nearest power of two).
+   > compact
+   > compactc --skip-zk src/counter.compact ./src/managed/counter
+
+   Compactc version: 0.22.0
    ```
 
-   The compiler also produces a directory with a TypeScript API for the contract and additional matierals in `src/managed`.
+   The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`.  The compiler's output files will be placed in the directory `contract/src/managed/counter`.
 
 3. Build TypeScript source files
 
