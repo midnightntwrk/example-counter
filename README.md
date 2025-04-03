@@ -6,18 +6,21 @@
 ## Prerequisites
 
 1. You must have NodeJS version 22 installed.
-2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact), create a directory for the compiler executables, and unzip the downloaded file in that directory.  Add that directory to your shell's path.  For example, if you unzipped the Compact compiler in `$HOME/bin/compactc`:
+2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact) 
+3. Create a directory for the compiler executables, and unzip the downloaded file into that directory.  
+4. Add the directory to your shell's $PATH. 
+
+   For example, if you unzipped the Compact compiler in `$HOME/bin/compactc`:
    ```sh
    export PATH=$PATH:$HOME/bin/compactc
    ```
-   Use the your own path to the compiler.
 
 ## The counter contract
 
 The [contract](contract) subdirectory contains:
 
-- the [smart contract](contract/src/counter.compact) itself
-- some [unit tests](contract/src/test/counter.test.ts) for it
+- the [smart contract](contract/src/counter.compact)
+- some [unit tests](contract/src/test/counter.test.ts) to test the smart contract
 
 ### The source code
 
@@ -29,7 +32,7 @@ ledger {
 }
 ```
 
-and a single transition function to change this state:
+and a single transition function to change the state:
 
 ```compact
 export circuit increment(): Void {
@@ -37,12 +40,11 @@ export circuit increment(): Void {
 }
 ```
 
-To see how you could verify how your smart contract runs,
-there exist unit tests in `contract/src/test/counter.test.ts`.
+To verify that the smart contract operate as expected,
+we've provided some unit tests in `contract/src/test/counter.test.ts`.
 
-They use a simple simulator that illustrate
-how to initialize and call smart contract code locally without running a node:
-`contract/src/test/counter-simulator.ts`
+We've also provided tests that use a simple simulator, which illustrates
+how to initialize and call the smart contract code locally without running a node in `contract/src/test/counter-simulator.ts`
 
 ### Building the smart contract
 
@@ -59,7 +61,7 @@ how to initialize and call smart contract code locally without running a node:
    npm run compact
    ```
 
-   You should see output from npm and the Compact compiler:
+   You should see the following output from npm and the Compact compiler:
 
    ```sh
    > compact
@@ -127,7 +129,8 @@ If you want one to be started automatically for you, use instead:
 ```sh
 npm run testnet-remote-ps
 ```
+Then follow the instructions from the CLI. 
 
-Then follow the instructions from the CLI. On the first run, you will want to create a new wallet and copy its address, so as to transfer funds to it from your Midnight Lace wallet or from [the official faucet](https://faucet.testnet-02.midnight.network/).
+If you did not previously created and funded a Midnight Lace wallet, you will need to do so. Funds for testing can be requested from [the official faucet](https://faucet.testnet-02.midnight.network/).
 
 You can find much more information in part 2 of the [Midnight developer tutorial](https://docs.midnight.network/develop/tutorial/building).
