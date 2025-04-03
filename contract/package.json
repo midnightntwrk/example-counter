@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "compact": "compactc --skip-zk src/counter.compact ./src/managed/counter",
+    "compact": "compactc --skip-zk src/counter.compact src/managed/counter",
     "test": "jest",
     "test:compile": "npm run compact && jest",
     "prepack": "yarn build",
