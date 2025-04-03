@@ -53,7 +53,7 @@ how to initialize and call smart contract code locally without running a node:
    npm install
    ```
 
-2. Compile the contract
+2. Compile the contract:
 
    ```sh
    npm run compact
@@ -70,13 +70,13 @@ how to initialize and call smart contract code locally without running a node:
 
    The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`.  The compiler's output files will be placed in the directory `contract/src/managed/counter`.
 
-3. Build TypeScript source files
+3. Build the TypeScript source files:
 
    ```sh
    npm run build
    ```
 
-   This creates the `dist` directory.
+   This creates the `contract/dist` directory.
 
 4. Start unit tests:
    ```sh
