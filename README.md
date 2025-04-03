@@ -63,7 +63,7 @@ how to initialize and call smart contract code locally without running a node:
 
    ```sh
    > compact
-   > compactc --skip-zk src/counter.compact ./src/managed/counter
+   > compactc --skip-zk src/counter.compact src/managed/counter
 
    Compactc version: 0.22.0
    ```
