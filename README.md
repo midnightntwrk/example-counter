@@ -6,11 +6,12 @@
 ## Prerequisites
 
 1. You must have NodeJS version 22 installed.
-2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact) 
-3. Create a directory for the compiler executables, and unzip the downloaded file into that directory.  
-4. Add the directory to your shell's $PATH. 
+2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact) and follow the instructions to install it.
+3. Create a directory for the compiler executables, and unzip the downloaded file into that directory.
+4. Add the directory to your shell's $PATH.
 
    For example, if you unzipped the Compact compiler in `$HOME/bin/compactc`:
+
    ```sh
    export PATH=$PATH:$HOME/bin/compactc
    ```
@@ -27,16 +28,14 @@ The [contract](contract) subdirectory contains:
 The contract contains a declaration of state stored publicly on the blockchain:
 
 ```compact
-ledger {
-  round: Counter;
-}
+export ledger round: Counter;
 ```
 
 and a single transition function to change the state:
 
 ```compact
-export circuit increment(): Void {
-  ledger.round.increment(1);
+export circuit increment(): [] {
+  round.increment(1);
 }
 ```
 
@@ -70,7 +69,7 @@ how to initialize and call the smart contract code locally without running a nod
    Compactc version: 0.22.0
    ```
 
-   The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`.  The compiler's output files will be placed in the directory `contract/src/managed/counter`.
+   The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`. The compiler's output files will be placed in the directory `contract/src/managed/counter`.
 
 3. Build the TypeScript source files:
 
@@ -129,7 +128,8 @@ If you want one to be started automatically for you, use instead:
 ```sh
 npm run testnet-remote-ps
 ```
-Then follow the instructions from the CLI. 
+
+Then follow the instructions from the CLI.
 
 If you did not previously created and funded a Midnight Lace wallet, you will need to do so. Funds for testing can be requested from [the official faucet](https://faucet.testnet-02.midnight.network/).
 
