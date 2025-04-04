@@ -6,7 +6,7 @@ We welcome your contributions to the Midnight network! By contributing, you'll p
 
 * **Review Existing Contributions and Issues:** Before submitting, please check if a similar issue or feature request already exists by searching our issue tracker.
 * **Understand the Project:** Familiarize yourself with Midnight's architecture, technology, and coding standards. You can find relevant information in our litepaper. 
-* **Set up Your Development Environment:** Ensure you have the necessary tools and dependencies installed. See our developer documentation for detailed instructions. 
+* **Set up Your Development Environment:** Ensure you have the necessary tools and dependencies installed. See our developer [documentation](https://docs.midnight.network/) for detailed instructions. 
 
 ## Submitting Issues
 
@@ -33,7 +33,7 @@ Ensure the title is a clear summary of the requirement and provides enough conte
 
 ## Requirements for Acceptable Contributions:
 
-* **Coding Standards:** Code must adhere to the coding style guides defined in our [documentation].
+* **Coding Standards:** Code must adhere to the coding style guides defined in our documentation
 * **Testing:** New functionality must include corresponding unit tests and integration tests.
 * **Documentation:** Code changes should be accompanied by proposed relevant documentation updates.
 * **License:** All contributions must be compatible with the project's license.
