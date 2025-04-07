@@ -27,7 +27,7 @@
     "@midnight-ntwrk/ledger": "^3.0.6",
     "@midnight-ntwrk/midnight-js-network-id": "^0.2.5",
     "@midnight-ntwrk/zswap": "^3.0.6",
-    "eslint": "^9.23.0",
+    "eslint": "^9.24.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.3.1",
     "ts-node": "^10.9.2",
