@@ -16,6 +16,9 @@ logs/*.log
 midnight-level-db
 coverage
 
+# Test reports
+**/reports
+
 # Dependency directories
 jspm_packages/
 

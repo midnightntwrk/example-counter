@@ -1,35 +1,37 @@
 version: 2
-
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 30
+    labels:
+      - 'dependencies'
+      - 'npm'
+    versioning-strategy: auto
       
-#  - package-ecosystem: "cargo"
-#    directory: "/"
-#    registries: "*"
-#    schedule:
-#      interval: "daily"
-#
   - package-ecosystem: "npm"
     directory: "/contract"
     schedule:
       interval: "daily"
+    labels:
+      - 'dependencies'
+      - 'npm'
+      - 'contract'
 
   - package-ecosystem: "npm"
     directory: "/counter-cli"
     schedule:
       interval: "daily"
-
-#  - package-ecosystem: "docker"
-#    directory: "/"
-#    schedule:
-#      interval: "weekly"
-#
-#registries:
-#   github:
-#     type: git
-#     url: https://github.com
-#     username: MidnightCI
-#     password: ${{ secrets.MIDNIGHTCI_REPO }}
+    labels:
+      - 'dependencies'
+      - 'npm'
+      - 'counter-cli'

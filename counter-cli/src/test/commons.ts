@@ -29,7 +29,7 @@ import type { Logger } from 'pino';
 import type { Wallet } from '@midnight-ntwrk/wallet-api';
 import type { Resource } from '@midnight-ntwrk/wallet';
 
-const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000042';
+const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
 
 export interface TestConfiguration {
   seed: string;
