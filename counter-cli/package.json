@@ -24,7 +24,7 @@
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "^0.2.5",
     "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "^0.2.5",
     "@midnight-ntwrk/midnight-js-level-private-state-provider": "^0.2.5",
-    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "^0.2.5",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "^1.0.0",
     "@midnight-ntwrk/midnight-js-types": "^0.2.5",
     "@midnight-ntwrk/wallet": "^3.7.5",
     "@midnight-ntwrk/wallet-api": "^3.5.0",
