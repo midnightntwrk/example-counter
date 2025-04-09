@@ -13,7 +13,7 @@
     "test-api": "docker compose -f standalone.yml pull && DEBUG='testcontainers' NODE_OPTIONS='--experimental-vm-modules --max-old-space-size=8192' jest --passWithNoTests --detectOpenHandles --forceExit -c jest.api.config.ts",
     "build": "rm -rf dist && tsc --project tsconfig.build.json && cp -r ../contract/src/ dist/contract/src",
     "lint": "eslint src",
-    "compile-contract": "$COMPACT_PATH ../contract/src/counter.compact ./dist/contract/src/managed/counter",
+    "compile-contract": "compactc ../contract/src/counter.compact ./dist/contract/src/managed/counter",
     "start-testnet-remote": "npm run build && npm run compile-contract && npm run testnet-remote",
     "start-testnet-remote-ps": "npm run build && npm run compile-contract && npm run testnet-remote-ps"
   },
