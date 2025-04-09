@@ -34,7 +34,7 @@ describe("Counter smart contract", () => {
     const initialLedgerState = simulator.getLedger();
     expect(initialLedgerState.round).toEqual(0n);
     const initialPrivateState = simulator.getPrivateState();
-    expect(initialPrivateState).toEqual({});
+    expect(initialPrivateState).toEqual({ privateCounter: 0 });
   });
 
   it("increments the counter correctly", () => {
@@ -42,6 +42,6 @@ describe("Counter smart contract", () => {
     const nextLedgerState = simulator.increment();
     expect(nextLedgerState.round).toEqual(1n);
     const nextPrivateState = simulator.getPrivateState();
-    expect(nextPrivateState).toEqual({});
+    expect(nextPrivateState).toEqual({ privateCounter: 0 });
   });
 });

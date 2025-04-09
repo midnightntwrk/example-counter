@@ -55,7 +55,7 @@ const deployOrJoin = async (providers: CounterProviders, rli: Interface): Promis
     const choice = await rli.question(DEPLOY_OR_JOIN_QUESTION);
     switch (choice) {
       case '1':
-        return await api.deploy(providers);
+        return await api.deploy(providers, { privateCounter: 0 });
       case '2':
         return await join(providers, rli);
       case '3':

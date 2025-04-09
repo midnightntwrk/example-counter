@@ -1,12 +1,12 @@
 # Counter DApp
 
 [![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.22.0-1abc9c.svg)](https://shields.io/)  
-[![Generic badge](https://img.shields.io/badge/TypeScript-5.2.2-blue.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
 ## Prerequisites
 
 1. You must have NodeJS version 22 installed.
-2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact) and follow the instructions to install it.
+2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact) and follow the instructions to install it (in particular the instructions regarding permissions that must be set to compile the contracts).
 3. Create a directory for the compiler executables, and unzip the downloaded file into that directory.
 4. Add the directory to your shell's $PATH.
 
@@ -15,6 +15,9 @@
    ```sh
    export PATH=$PATH:$HOME/bin/compactc
    ```
+
+5. Run `npm install` to install all the packages you will need.
+6. Compile and build the code in the `contract` folder before running the code in the `counter-cli` folder.
 
 ## The counter contract
 

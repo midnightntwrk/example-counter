@@ -16,8 +16,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
-import { Contract, ledger } from '../../contract/src/managed/counter/contract/index.cjs';
-import { witnesses } from '../../contract/src/witnesses.js';
+import { Counter } from '../../contract/src/index.js';
+import { witnesses, type CounterPrivateState } from '../../contract/src/witnesses.js';
 import { type CoinInfo, nativeToken, Transaction, type TransactionId } from '@midnight-ntwrk/ledger';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
@@ -26,6 +26,7 @@ import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config
 import {
   type BalancedTransaction,
   createBalancedTx,
+  type FinalizedTxData,
   type MidnightProvider,
   type UnbalancedTransaction,
   type WalletProvider,
@@ -42,11 +43,11 @@ import {
   type CounterContract,
   type CounterProviders,
   type DeployedCounterContract,
-  type PrivateStates,
+  type CounterPrivateStateId,
 } from './common-types.js';
 import { type Config, contractConfig } from './config.js';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { toHex } from '@midnight-ntwrk/midnight-js-utils';
+import { assertIsContractAddress, toHex } from '@midnight-ntwrk/midnight-js-utils';
 import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import * as fsAsync from 'node:fs/promises';
 import * as fs from 'node:fs';
@@ -57,15 +58,20 @@ let logger: Logger;
 // @ts-expect-error: It's needed to enable WebSocket usage through apollo
 globalThis.WebSocket = WebSocket;
 
-export const getCounterLedgerState = (
+export const getCounterLedgerState = async (
   providers: CounterProviders,
   contractAddress: ContractAddress,
-): Promise<bigint | null> =>
-  providers.publicDataProvider
+): Promise<bigint | null> => {
+  assertIsContractAddress(contractAddress);
+  logger.info('Checking contract ledger state...');
+  const state = await providers.publicDataProvider
     .queryContractState(contractAddress)
-    .then((contractState) => (contractState != null ? ledger(contractState.data).round : null));
+    .then((contractState) => (contractState != null ? Counter.ledger(contractState.data).round : null));
+  logger.info(`Ledger state: ${state}`);
+  return state;
+};
 
-export const counterContractInstance: CounterContract = new Contract(witnesses);
+export const counterContractInstance: CounterContract = new Counter.Contract(witnesses);
 
 export const joinContract = async (
   providers: CounterProviders,
@@ -74,33 +80,32 @@ export const joinContract = async (
   const counterContract = await findDeployedContract(providers, {
     contractAddress,
     contract: counterContractInstance,
-    privateStateKey: 'counterPrivateState',
-    initialPrivateState: {},
+    privateStateId: 'counterPrivateState',
+    initialPrivateState: { privateCounter: 0 },
   });
   logger.info(`Joined contract at address: ${counterContract.deployTxData.public.contractAddress}`);
   return counterContract;
 };
 
-export const deploy = async (providers: CounterProviders): Promise<DeployedCounterContract> => {
-  logger.info(`Deploying counter contract...`);
+export const deploy = async (
+  providers: CounterProviders,
+  privateState: CounterPrivateState,
+): Promise<DeployedCounterContract> => {
+  logger.info('Deploying counter contract...');
   const counterContract = await deployContract(providers, {
-    privateStateKey: 'counterPrivateState',
     contract: counterContractInstance,
-    initialPrivateState: {},
+    privateStateId: 'counterPrivateState',
+    initialPrivateState: privateState,
   });
   logger.info(`Deployed contract at address: ${counterContract.deployTxData.public.contractAddress}`);
   return counterContract;
 };
 
-export const increment = async (
-  counterContract: DeployedCounterContract,
-): Promise<{ blockHeight: number; txHash: string }> => {
+export const increment = async (counterContract: DeployedCounterContract): Promise<FinalizedTxData> => {
   logger.info('Incrementing...');
-  await new Promise((resolve) => setTimeout(resolve, 2000)); // timeout needed due to bug PM-12428
-  const tx = await counterContract.callTx.increment();
-  const { txHash, blockHeight } = tx.public;
-  logger.info(`Transaction ${txHash} added in block ${blockHeight}`);
-  return { txHash, blockHeight };
+  const finalizedTxData = await counterContract.callTx.increment();
+  logger.info(`Transaction ${finalizedTxData.public.txId} added in block ${finalizedTxData.public.blockHeight}`);
+  return finalizedTxData.public;
 };
 
 export const displayCounterValue = async (
@@ -316,7 +321,7 @@ export const buildFreshWallet = async (config: Config): Promise<Wallet & Resourc
 export const configureProviders = async (wallet: Wallet & Resource, config: Config) => {
   const walletAndMidnightProvider = await createWalletAndMidnightProvider(wallet);
   return {
-    privateStateProvider: levelPrivateStateProvider<PrivateStates>({
+    privateStateProvider: levelPrivateStateProvider<typeof CounterPrivateStateId>({
       privateStateStoreName: contractConfig.privateStateStoreName,
     }),
     publicDataProvider: indexerPublicDataProvider(config.indexer, config.indexerWS),

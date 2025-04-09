@@ -38,7 +38,9 @@ export class CounterSimulator {
       currentPrivateState,
       currentContractState,
       currentZswapLocalState
-    } = this.contract.initialState(constructorContext({}, "0".repeat(64)));
+    } = this.contract.initialState(
+      constructorContext({ privateCounter: 0 }, "0".repeat(64))
+    );
     this.circuitContext = {
       currentPrivateState,
       currentZswapLocalState,
