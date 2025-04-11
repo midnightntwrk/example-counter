@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "testnet-remote": "node --experimental-specifier-resolution=node --loader ts-node/esm dist/counter-cli/src/testnet-remote.js",
-    "testnet-remote-ps": "cp -r proof-server-testnet.yml ./dist/counter-cli && node --experimental-specifier-resolution=node dist/counter-cli/src/testnet-remote-start-proof-server.js",
+    "testnet-remote-ps": "cp -r proof-server-testnet.yml ./dist/counter-cli && node --experimental-specifier-resolution=node ts-node/esm dist/counter-cli/src/testnet-remote-start-proof-server.js",
     "testnet-local": "node --experimental-specifier-resolution=node dist/testnet-local.js",
     "standalone": "docker compose -f standalone.yml pull && node --experimental-specifier-resolution=node dist/standalone.js",
     "test-api": "docker compose -f standalone.yml pull && DEBUG='testcontainers' NODE_OPTIONS='--experimental-vm-modules --max-old-space-size=8192' jest --passWithNoTests --detectOpenHandles --forceExit -c jest.api.config.ts",
