@@ -1,14 +1,14 @@
 services:
   proof-server:
     container_name: 'counter-proof-server'
-    image: 'midnightnetwork/proof-server:3.0.6'
+    image: 'ghcr.io/midnight-ntwrk/proof-server:4.0.0-rc.1'
     ports:
       - "6300"
     environment:
       RUST_BACKTRACE: "full"
   indexer:
     container_name: 'counter-indexer'
-    image: 'midnightnetwork/midnight-pubsub-indexer:2.3.0'
+    image: 'ghcr.io/midnight-ntwrk/midnight-pubsub-indexer:latest'
     platform: linux/amd64
     ports:
       - '0:8088'
@@ -27,7 +27,7 @@ services:
       node:
         condition: service_started
   node:
-    image: 'midnightnetwork/midnight-node:0.8.0'
+    image: 'ghcr.io/midnight-ntwrk/midnight-node:0.12.0-rc.2'
     platform: linux/amd64
     container_name: 'counter-node'
     ports:
