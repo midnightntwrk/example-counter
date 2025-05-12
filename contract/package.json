@@ -25,7 +25,7 @@
     "@jest/globals": "^29.7.0",
     "@midnight-ntwrk/compact-runtime": "^0.7.0",
     "@midnight-ntwrk/ledger": "^3.0.6",
-    "@midnight-ntwrk/midnight-js-network-id": "^1.0.0",
+    "@midnight-ntwrk/midnight-js-network-id": "^2.0.0",
     "@midnight-ntwrk/zswap": "^3.0.6",
     "eslint": "^9.24.0",
     "jest": "^29.7.0",
