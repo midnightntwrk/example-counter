@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { expect } from 'vitest';
 import { type Config, StandaloneConfig, currentDir, TestnetRemoteConfig } from '../config';
 import {
   DockerComposeEnvironment,

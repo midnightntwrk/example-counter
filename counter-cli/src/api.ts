@@ -126,6 +126,7 @@ export const createWalletAndMidnightProvider = async (wallet: Wallet): Promise<W
   const state = await Rx.firstValueFrom(wallet.state());
   return {
     coinPublicKey: state.coinPublicKey,
+    encryptionPublicKey: state.encryptionPublicKey,
     balanceTx(tx: UnbalancedTransaction, newCoins: CoinInfo[]): Promise<BalancedTransaction> {
       return wallet
         .balanceTransaction(
@@ -148,15 +149,14 @@ export const waitForSync = (wallet: Wallet) =>
       Rx.throttleTime(5_000),
       Rx.tap((state) => {
         const scanned = state.syncProgress?.synced ?? 0n;
-        const total = state.syncProgress?.total.toString() ?? 'unknown number';
+        const indicesBehind = state.syncProgress?.lag.applyGap ?? 'unknown number';
         const txs = state.transactionHistory.length;
-        logger.info(`Wallet scanned ${scanned} indices out of ${total}, transactions=${txs}`);
+        logger.info(`Wallet scanned ${scanned} indices, it is ${indicesBehind} indices behind, transactions=${txs}`);
       }),
       Rx.filter((state) => {
         // Let's allow progress only if wallet is synced fully
-        const synced = state.syncProgress?.synced ?? 0n;
-        const total = state.syncProgress?.total ?? 50n;
-        return state.syncProgress !== undefined && total === synced;
+        const synced = state.syncProgress?.synced;
+        return state.syncProgress !== undefined && !!synced;
       }),
     ),
   );
@@ -167,8 +167,8 @@ export const waitForSyncProgress = async (wallet: Wallet) =>
       Rx.throttleTime(5_000),
       Rx.tap((state) => {
         const scanned = state.syncProgress?.synced ?? 0n;
-        const total = state.syncProgress?.total.toString() ?? 'unknown number';
-        logger.info(`Wallet scanned ${scanned} indices out of ${total}`);
+        const indicesBehind = state.syncProgress?.lag.applyGap ?? 'unknown number';
+        logger.info(`Wallet scanned ${scanned} indices, it is ${indicesBehind} indices behind`);
       }),
       Rx.filter((state) => {
         // Let's allow progress only if syncProgress is defined
@@ -183,16 +183,15 @@ export const waitForFunds = (wallet: Wallet) =>
       Rx.throttleTime(10_000),
       Rx.tap((state) => {
         const scanned = state.syncProgress?.synced ?? 0n;
-        const total = state.syncProgress?.total.toString() ?? 'unknown number';
+        const indicesBehind = state.syncProgress?.lag.applyGap ?? 'unknown number';
         logger.info(
-          `Wallet processed ${scanned} indices out of ${total}, transactions=${state.transactionHistory.length}`,
+          `Wallet processed ${scanned} indices, it is ${indicesBehind} indices behind, transactions=${state.transactionHistory.length}`,
         );
       }),
       Rx.filter((state) => {
         // Let's allow progress only if wallet is synced
         const synced = state.syncProgress?.synced;
-        const total = state.syncProgress?.total;
-        return synced !== undefined && synced === total;
+        return synced !== undefined && !!synced;
       }),
       Rx.map((s) => s.balances[nativeToken()] ?? 0n),
       Rx.filter((balance) => balance > 0n),
@@ -218,39 +217,23 @@ export const buildWalletAndWaitForFunds = async (
         wallet = await WalletBuilder.restore(indexer, indexerWS, proofServer, node, serialized, 'info');
         wallet.start();
         const stateObject = JSON.parse(serialized);
-        if ((await isAnotherChain(wallet, Number(stateObject.offset))) === true) {
-          logger.warn('The chain was reset, building wallet from scratch');
-          wallet = await WalletBuilder.buildFromSeed(
-            indexer,
-            indexerWS,
-            proofServer,
-            node,
-            seed,
-            getZswapNetworkId(),
-            'info',
-          );
-          wallet.start();
-        } else {
-          const newState = await waitForSync(wallet);
-          // allow for situations when there's no new index in the network between runs
-          if ((newState.syncProgress?.total ?? 0n) >= stateObject.offset - 1) {
-            logger.info('Wallet was able to sync from restored state');
-          } else {
-            logger.info(`Offset: ${stateObject.offset}`);
-            logger.info(`SyncProgress.total: ${newState.syncProgress?.total}`);
-            logger.warn('Wallet was not able to sync from restored state, building wallet from scratch');
-            wallet = await WalletBuilder.buildFromSeed(
-              indexer,
-              indexerWS,
-              proofServer,
-              node,
-              seed,
-              getZswapNetworkId(),
-              'info',
-            );
-            wallet.start();
-          }
-        }
+        // if ((await isAnotherChain(wallet, Number(stateObject.offset))) === true) {
+        //   logger.warn('The chain was reset, building wallet from scratch');
+        //   wallet = await WalletBuilder.build(indexer, indexerWS, proofServer, node, seed, getZswapNetworkId(), 'info');
+        //   wallet.start();
+        // } else {
+        const newState = await waitForSync(wallet);
+        // allow for situations when there's no new index in the network between runs
+        // if ((newState.syncProgress?.total ?? 0n) >= stateObject.offset - 1) {
+        //   logger.info('Wallet was able to sync from restored state');
+        // } else {
+        logger.info(`Offset: ${stateObject.offset}`);
+        logger.info(`Indices behind: ${newState.syncProgress?.lag.applyGap}`);
+        logger.warn('Wallet was not able to sync from restored state, building wallet from scratch');
+        wallet = await WalletBuilder.build(indexer, indexerWS, proofServer, node, seed, getZswapNetworkId(), 'info');
+        wallet.start();
+        // }
+        // }
       } catch (error: unknown) {
         if (typeof error === 'string') {
           logger.error(error);
@@ -258,41 +241,17 @@ export const buildWalletAndWaitForFunds = async (
           logger.error(error.message);
         }
         logger.warn('Wallet was not able to restore using the stored state, building wallet from scratch');
-        wallet = await WalletBuilder.buildFromSeed(
-          indexer,
-          indexerWS,
-          proofServer,
-          node,
-          seed,
-          getZswapNetworkId(),
-          'info',
-        );
+        wallet = await WalletBuilder.build(indexer, indexerWS, proofServer, node, seed, getZswapNetworkId(), 'info');
         wallet.start();
       }
     } else {
       logger.info('Wallet save file not found, building wallet from scratch');
-      wallet = await WalletBuilder.buildFromSeed(
-        indexer,
-        indexerWS,
-        proofServer,
-        node,
-        seed,
-        getZswapNetworkId(),
-        'info',
-      );
+      wallet = await WalletBuilder.build(indexer, indexerWS, proofServer, node, seed, getZswapNetworkId(), 'info');
       wallet.start();
     }
   } else {
     logger.info('File path for save file not found, building wallet from scratch');
-    wallet = await WalletBuilder.buildFromSeed(
-      indexer,
-      indexerWS,
-      proofServer,
-      node,
-      seed,
-      getZswapNetworkId(),
-      'info',
-    );
+    wallet = await WalletBuilder.build(indexer, indexerWS, proofServer, node, seed, getZswapNetworkId(), 'info');
     wallet.start();
   }
 
@@ -349,13 +308,14 @@ export const streamToString = async (stream: fs.ReadStream): Promise<string> => 
   });
 };
 
-export const isAnotherChain = async (wallet: Wallet, offset: number) => {
-  const state = await waitForSyncProgress(wallet);
-  // allow for situations when there's no new index in the network between runs
-  if (state.syncProgress !== undefined) {
-    return state.syncProgress.total < offset - 1;
-  }
-};
+// Not sure if this functions is still needed now that the Wallet API doesn't track the total number of indices anymore
+// export const isAnotherChain = async (wallet: Wallet, offset: number) => {
+//   const state = await waitForSyncProgress(wallet);
+//   // allow for situations when there's no new index in the network between runs
+//   if (state.syncProgress !== undefined) {
+//     return state.syncProgress.total < offset - 1;
+//   }
+// };
 
 export const saveState = async (wallet: Wallet, filename: string) => {
   const directoryPath = process.env.SYNC_CACHE;
