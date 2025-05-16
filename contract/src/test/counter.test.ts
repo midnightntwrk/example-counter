@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { it, describe, expect } from "@jest/globals";
 import { CounterSimulator } from "./counter-simulator.js";
 import {
   NetworkId,
   setNetworkId
 } from "@midnight-ntwrk/midnight-js-network-id";
+import { describe, it, expect } from "vitest";
 
 setNetworkId(NetworkId.Undeployed);
 

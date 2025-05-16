@@ -28,6 +28,7 @@ import { nativeToken } from '@midnight-ntwrk/ledger';
 import type { Logger } from 'pino';
 import type { Wallet } from '@midnight-ntwrk/wallet-api';
 import type { Resource } from '@midnight-ntwrk/wallet';
+import { expect } from 'vitest';
 
 const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
 
@@ -159,7 +160,7 @@ export class TestEnvironment {
   };
 
   static getProofServerContainer = async (env: string) =>
-    await new GenericContainer('ghcr.io/midnight-ntwrk/proof-server:3.0.2')
+    await new GenericContainer('midnightnetwork/proof-server:4.0.0')
       .withExposedPorts(6300)
       .withCommand([`midnight-proof-server --network ${env}`])
       .withEnvironment({ RUST_BACKTRACE: 'full' })

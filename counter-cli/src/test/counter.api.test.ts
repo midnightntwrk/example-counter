@@ -21,6 +21,7 @@ import { type CounterProviders } from '../common-types';
 import { currentDir } from '../config';
 import { createLogger } from '../logger-utils';
 import { TestEnvironment } from './commons';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 const logDir = path.resolve(currentDir, '..', 'logs', 'tests', `${new Date().toISOString()}.log`);
 const logger = await createLogger(logDir);
@@ -30,13 +31,16 @@ describe('API', () => {
   let wallet: Wallet & Resource;
   let providers: CounterProviders;
 
-  beforeAll(async () => {
-    api.setLogger(logger);
-    testEnvironment = new TestEnvironment(logger);
-    const testConfiguration = await testEnvironment.start();
-    wallet = await testEnvironment.getWallet();
-    providers = await api.configureProviders(wallet, testConfiguration.dappConfig);
-  }, 1000 * 60 * 45);
+  beforeAll(
+    async () => {
+      api.setLogger(logger);
+      testEnvironment = new TestEnvironment(logger);
+      const testConfiguration = await testEnvironment.start();
+      wallet = await testEnvironment.getWallet();
+      providers = await api.configureProviders(wallet, testConfiguration.dappConfig);
+    },
+    1000 * 60 * 45,
+  );
 
   afterAll(async () => {
     await testEnvironment.saveWalletCache();

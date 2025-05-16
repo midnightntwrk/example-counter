@@ -1,6 +1,6 @@
 # Counter DApp
 
-[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.22.0-1abc9c.svg)](https://shields.io/)  
+[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.23.0-1abc9c.svg)](https://shields.io/)  
 [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
 ## Prerequisites
@@ -84,7 +84,7 @@ how to initialize and call the smart contract code locally without running a nod
    > compact
    > compactc --skip-zk src/counter.compact src/managed/counter
 
-   Compactc version: 0.22.0
+   Compactc version: 0.23.0
    ```
 
    The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`. The compiler's output files will be placed in the directory `contract/src/managed/counter`.

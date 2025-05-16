@@ -165,19 +165,23 @@ export const run = async (config: Config, _logger: Logger, dockerEnv?: DockerCom
       rli.close();
       rli.removeAllListeners();
     } catch (e) {
+      logger.error(`Error closing readline interface: ${e}`);
     } finally {
       try {
         if (wallet !== null) {
           await wallet.close();
         }
       } catch (e) {
+        logger.error(`Error closing wallet: ${e}`);
       } finally {
         try {
           if (env !== undefined) {
             await env.down();
             logger.info('Goodbye');
           }
-        } catch (e) {}
+        } catch (e) {
+          logger.error(`Error shutting down docker environment: ${e}`);
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 services:
   proof-server:
     container_name: 'counter-proof-server'
-    image: 'midnightnetwork/proof-server:3.0.6'
+    image: "midnightnetwork/proof-server:4.0.0"
     ports:
       - "6300"
     environment:
@@ -27,7 +27,7 @@ services:
       node:
         condition: service_started
   node:
-    image: 'midnightnetwork/midnight-node:0.8.0'
+    image: 'midnightnetwork/midnight-node:0.12.0'
     platform: linux/amd64
     container_name: 'counter-node'
     ports:
