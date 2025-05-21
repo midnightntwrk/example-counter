@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-1. You must have NodeJS version 22 installed.
+1. You must have NodeJS version 22.15 or greater installed.
 2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact) and follow the instructions to install it (in particular the instructions regarding permissions that must be set to compile the contracts).
 3. Create a directory for the compiler executables, and unzip the downloaded file into that directory.
 4. Add the directory to your shell's $PATH.
@@ -67,33 +67,34 @@ how to initialize and call the smart contract code locally without running a nod
 
 Compile the contract:
 
-   ```sh
-   npm run compact
-   ```
+```sh
+npm run compact
+```
 
-   You should see the following output from npm and the Compact compiler:
+You should see the following output from npm and the Compact compiler:
 
-   ```sh
-   > compact
-   > compactc --skip-zk src/counter.compact src/managed/counter
+```sh
+> compact
+> compactc --skip-zk src/counter.compact src/managed/counter
 
-   Compactc version: 0.23.0
-   ```
+Compactc version: 0.23.0
+```
 
-   The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`. The compiler's output files will be placed in the directory `contract/src/managed/counter`.
+The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`. The compiler's output files will be placed in the directory `contract/src/managed/counter`.
 
 Build the TypeScript source files:
 
-   ```sh
-   npm run build
-   ```
+```sh
+npm run build
+```
 
-   This creates the `contract/dist` directory.
+This creates the `contract/dist` directory.
 
 Start unit tests:
-   ```sh
-   npm run test
-   ```
+
+```sh
+npm run test
+```
 
 ## CLI
 
