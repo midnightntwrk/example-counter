@@ -16,11 +16,14 @@
 pragma language_version 0.15;
 
 import CompactStandardLibrary;
+export ledger tokens: Map<Uint<64>, Bytes<32>>;
 
 // public state
 export ledger round: Counter;
 
 // transition function changing public state
 export circuit increment(): [] {
-  round.increment(1);
+  round.increment(5);
+  const text = pad(32,"Hello, world!") as Bytes<32>;
+  tokens.insert(round, text);
 }

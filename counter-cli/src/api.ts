@@ -59,13 +59,20 @@ globalThis.WebSocket = WebSocket;
 export const getCounterLedgerState = async (
   providers: CounterProviders,
   contractAddress: ContractAddress,
-): Promise<bigint | null> => {
+): Promise<any | null> => {
   assertIsContractAddress(contractAddress);
   logger.info('Checking contract ledger state...');
   const state = await providers.publicDataProvider
     .queryContractState(contractAddress)
-    .then((contractState) => (contractState != null ? Counter.ledger(contractState.data).round : null));
-  logger.info(`Ledger state: ${state}`);
+    .then((contractState) => (contractState != null ? Counter.ledger(contractState.data) : null));
+  state && console.log(Object.keys(state));
+  state && console.log(state.tokens.size());
+  if (state) {
+    for (const [key, value] of state.tokens) {
+      console.log(`Key: ${key.toString()}, Value: ${Buffer.from(value).toString('utf8')}`);
+    }
+  }
+  logger.info(`Ledger state: ${JSON.stringify(state, (_, value) => typeof value === 'bigint' ? value.toString() : value)}`);
   return state;
 };
 
@@ -115,7 +122,7 @@ export const displayCounterValue = async (
   if (counterValue === null) {
     logger.info(`There is no counter contract deployed at ${contractAddress}.`);
   } else {
-    logger.info(`Current counter value: ${Number(counterValue)}`);
+    logger.info(`Current counter value: ${JSON.stringify(counterValue, (_, value) => typeof value === 'bigint' ? value.toString() : value)}`);
   }
   return { contractAddress, counterValue };
 };
