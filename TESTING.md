@@ -4,11 +4,11 @@ This document outlines the steps to verify that updated package versions do not 
 
 ---
 
-## 1. Install Dependencies
+## 1. Update the Dependencies
 
-Follow the instructions in the [README.md](./README.md) to install all required dependencies.
-
-- [ ] Run the dependency installation command(s)
+- [ ] Run `npx npm-check-updates -u` to install the updated dependencies.
+- [ ] Follow the instructions in the [README.md](./README.md) to verify they are still correct.
+- [ ] Run the dependency installation command `npm install`
 - [ ] Confirm there are no errors
 
 ## 2. Compile the Compact Contract
