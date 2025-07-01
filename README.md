@@ -74,10 +74,10 @@ npm run compact
 You should see the following output from npm and the Compact compiler:
 
 ```sh
-> compact
-> compactc --skip-zk src/counter.compact src/managed/counter
-
-Compactc version: 0.23.0
+Compactc version: 0.24.0
+Compiling 1 circuits:
+  circuit "increment" (k=10, rows=29)
+Overall progress [====================] 1/1
 ```
 
 The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`. The compiler's output files will be placed in the directory `contract/src/managed/counter`.
@@ -131,6 +131,6 @@ npm run testnet-remote-ps
 
 Then follow the instructions from the CLI.
 
-If you did not previously create and fund a Midnight Lace wallet, you will need to do so. Funds for testing can be requested from [the official faucet](https://faucet.testnet-02.midnight.network/).
+If you did not previously create and fund a Midnight Lace wallet, you will need to do so. Funds for testing can be requested from [the official faucet](https://midnight.network/test-faucet).
 
 You can find more information in part 2 of the [Midnight developer tutorial](https://docs.midnight.network/develop/tutorial/building).

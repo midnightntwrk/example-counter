@@ -13,3 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to MidnightJS version 2
 - Switch from Jest to Vitest
+
+## [2.0.1]
+
+- Minor package version updates
+- README file update
