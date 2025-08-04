@@ -25,12 +25,9 @@ jobs:
         env:
           COMPACT_VERSION: 0.24.0
         run: |
-          export PATH=${PWD}:$PATH
-          echo "PATH=${PWD}:$PATH" >> $GITHUB_ENV
-          wget https://d3fazakqrumx6p.cloudfront.net/artifacts/compiler/compactc_${COMPACT_VERSION}/compactc_v${COMPACT_VERSION}_x86_64-unknown-linux-musl.zip
-          unzip ./compactc_v${COMPACT_VERSION}_x86_64-unknown-linux-musl.zip
-          rm ./compactc_v${COMPACT_VERSION}_x86_64-unknown-linux-musl.zip
-          compactc --version
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          compact update $COMPACT_VERSION
+          compact compile --version
 
       - name: Compile and test contract
         working-directory: contract
