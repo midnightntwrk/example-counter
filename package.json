@@ -8,15 +8,15 @@
     "contract"
   ],
   "devDependencies": {
-    "@eslint/js": "^9.31.0",
-    "@types/node": "^24.0.15",
+    "@eslint/js": "^9.32.0",
+    "@types/node": "^24.1.0",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
-    "eslint": "^9.31.0",
+    "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
-    "testcontainers": "^11.3.1",
+    "testcontainers": "^11.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
