@@ -1,14 +1,12 @@
 # Counter DApp
 
-[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.24.0-1abc9c.svg)](https://shields.io/)  
+[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.25.0-1abc9c.svg)](https://shields.io/)  
 [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
 ## Prerequisites
 
 1. You must have NodeJS version 22.15 or greater installed.
-2. Download the latest version of the Compact compiler from [the compiler release page](https://docs.midnight.network/relnotes/compact) and follow the instructions to install it (in particular the instructions regarding permissions that must be set to compile the contracts).
-3. Create a directory for the compiler executables, and unzip the downloaded file into that directory.
-4. Add the directory to your shell's $PATH.
+2. Download the latest version of the Compact developer tools from [the release page](https://docs.midnight.network/relnotes/compact-tools) and follow the instructions to install it.
 
    For example, if you unzipped the Compact compiler in `$HOME/bin/compactc`:
 
@@ -16,8 +14,8 @@
    export PATH=$PATH:$HOME/bin/compactc
    ```
 
-5. Run `npm install` in the root folder to install all the necessary packages.
-6. Compile and build the code in the `contract` folder before running the code in the `counter-cli` folder.  
+3. Run `npm install` in the root folder to install all the necessary packages.
+4. Compile and build the code in the `contract` folder before running the code in the `counter-cli` folder.  
    In the `contract` folder, run this command:
 
    ```sh
@@ -26,7 +24,7 @@
 
    Follow the instructions in the documentation [to install and launch the proof server](https://docs.midnight.network/develop/tutorial/using/proof-server).
 
-7. Switch to the `counter-cli` folder and run this command:
+5. Switch to the `counter-cli` folder and run this command:
 
    ```sh
    npm run start-testnet-remote
@@ -74,10 +72,8 @@ npm run compact
 You should see the following output from npm and the Compact compiler:
 
 ```sh
-Compactc version: 0.24.0
 Compiling 1 circuits:
   circuit "increment" (k=10, rows=29)
-Overall progress [====================] 1/1
 ```
 
 The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`. The compiler's output files will be placed in the directory `contract/src/managed/counter`.
