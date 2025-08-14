@@ -23,7 +23,7 @@ jobs:
 
       - name: Install compactc
         env:
-          COMPACT_VERSION: 0.24.0
+          COMPACT_VERSION: 0.25.0
         run: |
           curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
           compact update $COMPACT_VERSION
