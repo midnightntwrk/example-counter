@@ -18,3 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minor package version updates
 - README file update
+
+## [2.0.2]
+
+- Minor package version updates
