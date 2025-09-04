@@ -5,6 +5,7 @@
 
 ## Prerequisites
 
+
 1. You must have NodeJS version 22.15 or greater installed.
 2. Download the latest version of the Compact developer tools from [the release page](https://docs.midnight.network/relnotes/compact-tools) and follow the instructions to install it.
 
