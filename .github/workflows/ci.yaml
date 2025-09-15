@@ -1,5 +1,8 @@
 name: CI
 
+# ↓ lock down top‐level permissions. Define all permissions at job level
+permissions: {}
+
 on:
   push:
     branches: [ main ]
@@ -9,6 +12,8 @@ on:
 jobs:
   install-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read             # we only need to checkout code
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
