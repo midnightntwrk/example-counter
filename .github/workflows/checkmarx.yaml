@@ -1,10 +1,7 @@
 name: Checkmarx One Scan
 
-# ↓ lock down top‐level permissions to only what we use
-permissions:
-  contents: read             # we only need to checkout code
-  actions: read              # to query workflows/runs
-  pull-requests: write       # to comment on or label PRs
+# ↓ lock down top‐level permissions. Define all permissions at job level
+permissions: {}
 
 on:
   pull_request:
@@ -20,8 +17,9 @@ concurrency:
 jobs:
   build:
     permissions:
-      contents: read
-      pull-requests: write
+      contents: read             # we only need to checkout code
+      actions: read              # to query workflows/runs
+      pull-requests: write       # to comment on or label PRs
       security-events: write
 
     runs-on: ubuntu-latest
