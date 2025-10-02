@@ -18,7 +18,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "testcontainers": "^11.7.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
   "dependencies": {
