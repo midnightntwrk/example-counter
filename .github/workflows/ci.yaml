@@ -1,5 +1,8 @@
 name: CI
 
+# ↓ lock down top‐level permissions. Define all permissions at job level
+permissions: {}
+
 on:
   push:
     branches: [ main ]
@@ -9,12 +12,14 @@ on:
 jobs:
   install-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read             # we only need to checkout code
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  #v5.0.0
         with:
           node-version: '20'
 
