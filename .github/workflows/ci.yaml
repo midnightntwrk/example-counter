@@ -16,7 +16,12 @@ jobs:
       contents: read             # we only need to checkout code
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  #v5.0.0
+
+      - name: Setup Compact Compiler
+        uses: midnightntwrk/setup-compact-action@49f44ae4fc86021b1b6441bd8a5c8c62a24a859e
+        with:
+          compact-version: '0.26.0'
 
       - name: Install Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  #v5.0.0
@@ -25,14 +30,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Install compactc
-        env:
-          COMPACT_VERSION: 0.26.0
-        run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
-          compact update $COMPACT_VERSION
-          compact compile --version
 
       - name: Compile and test contract
         working-directory: contract
