@@ -1,133 +1,243 @@
 # Counter DApp
 
-[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.25.0-1abc9c.svg)](https://shields.io/)  
-[![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.25.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
+
+A Midnight smart contract example demonstrating counter functionality with zero-knowledge proofs on testnet.
+
+## Project Structure
+
+```
+example-counter/
+├── contract/               # Smart contract in Compact language
+│   ├── src/counter.compact # The actual smart contract
+│   └── src/test/           # Contract unit tests
+└── counter-cli/            # Command-line interface
+    └── src/                # CLI implementation
+```
 
 ## Prerequisites
 
 
-1. You must have NodeJS version 22.15 or greater installed.
-2. Download the latest version of the Compact developer tools from [the release page](https://docs.midnight.network/relnotes/compact-tools) and follow the instructions to install it.
+### 1. Node.js Version Check
 
-   For example, if you unzipped the Compact compiler in `$HOME/bin/compactc`:
+You need NodeJS version 22.15 or greater:
 
-   ```sh
-   export PATH=$PATH:$HOME/bin/compactc
-   ```
-
-3. Run `npm install` in the root folder to install all the necessary packages.
-4. Compile and build the code in the `contract` folder before running the code in the `counter-cli` folder.  
-   In the `contract` folder, run this command:
-
-   ```sh
-   npm run compact && npm run build
-   ```
-
-   Follow the instructions in the documentation [to install and launch the proof server](https://docs.midnight.network/develop/tutorial/using/proof-server).
-
-5. Switch to the `counter-cli` folder and run this command:
-
-   ```sh
-   npm run start-testnet-remote
-   ```
-
-   If you do not have a wallet yet, you will be given the option to create a new one. After getting your address, you can use the [official faucet](https://faucet.testnet-02.midnight.network/) to request coins to deploy a contract on testnet and interact with it.
-
-## The counter contract
-
-The [contract](contract) subdirectory contains:
-
-- the [smart contract](contract/src/counter.compact)
-- some [unit tests](contract/src/test/counter.test.ts) to test the smart contract
-
-### The source code
-
-The contract contains a declaration of state stored publicly on the blockchain:
-
-```compact
-export ledger round: Counter;
+```bash
+node --version
 ```
 
-and a single transition function to change the state:
+Expected output: `v22.15.0` or higher.
 
-```compact
-export circuit increment(): [] {
-  round.increment(1);
-}
+If you get a lower version: [Install Node.js 22+](https://nodejs.org/).
+
+### 2. Docker Installation
+
+The [proof server](https://docs.midnight.network/develop/tutorial/using/proof-server) runs in Docker, so you need Docker Desktop:
+
+```bash
+docker --version
 ```
 
-To verify that the smart contract operates as expected,
-we've provided some unit tests in `contract/src/test/counter.test.ts`.
+Expected output: `Docker version X.X.X`.
 
-We've also provided tests that use a simple simulator, which illustrates
-how to initialize and call the smart contract code locally without running a node in `contract/src/test/counter-simulator.ts`
+If Docker is not found: [Install Docker Desktop](https://docs.docker.com/desktop/). Make sure Docker Desktop is running (not just installed).
 
-### Building the smart contract
+## Setup Instructions
 
-Compile the contract:
+### Install the Compact Compiler
 
-```sh
-npm run compact
+The Compact compiler converts smart contracts written in the Compact language into executable circuits for zero-knowledge proof generation.
+
+#### Download and install compact compiler
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
 ```
 
-You should see the following output from npm and the Compact compiler:
+#### Add to your PATH (choose based on your shell)
 
-```sh
+```bash
+source $HOME/.local/bin/env                    # bash/zsh/sh
+source $HOME/.local/bin/env.fish              # fish
+```
+
+#### Update to the version required by this project (optional)
+
+```
+compact update 0.25.0
+```
+
+#### Verify installation
+
+```bash
+compact compile --version
+```
+
+Expected output: `0.25.0`.
+
+> If command not found: Restart your terminal and try the `source` command again.
+
+### Install Project Dependencies
+
+```bash
+npm install
+```
+
+### Compile the Smart Contract
+
+The Compact compiler generates TypeScript bindings and zero-knowledge circuits from the smart contract source code. Navigate to contract directory and compile the smart contract:
+
+```bash
+cd contract && npm run compact
+```
+
+Expected output:
+
+```
 Compiling 1 circuits:
   circuit "increment" (k=10, rows=29)
 ```
 
-The compiler will complete very quickly because we've instructed it to skip ZK key generation with the option `--skip-zk`. The compiler's output files will be placed in the directory `contract/src/managed/counter`.
+Note: First time may download zero-knowledge parameters (~500MB). This is normal and happens once.
 
-Build the TypeScript source files:
+### Build and Test
 
-```sh
-npm run build
+Build TypeScript files and run tests:
+
+```bash
+npm run build && npm run test
 ```
 
-This creates the `contract/dist` directory.
+### Build the CLI Interface
 
-Start unit tests:
+Navigate to CLI directory and build the project:
 
-```sh
-npm run test
+```bash
+cd ../counter-cli && npm run build
 ```
 
-## CLI
+### Start the Proof Server
 
-After building the smart contract you can deploy it using the project in the subdirectory `counter-cli`:
+The proof server generates zero-knowledge proofs for transactions locally to protect private data. It must be running before you can deploy or interact with contracts.
 
-```sh
-cd ../counter-cli
+#### Option A: Manual Proof Server (Recommended)
+
+Pull the Docker image:
+
+```bash
+docker pull midnightnetwork/proof-server:latest
 ```
 
-Build from source code:
+Then start the proof server (keep this terminal open):
 
-```sh
-npm run build
+```bash
+docker run -p 6300:6300 midnightnetwork/proof-server -- 'midnight-proof-server --network testnet'
 ```
 
-Run the DApp:
+Expected output:
 
-```sh
-npm run testnet-remote
+```
+INFO midnight_proof_server: This proof server processes transactions for TestNet.
+INFO actix_server::server: starting service: "actix-web-service-0.0.0.0:6300"
 ```
 
-If you want to launch all these steps at once, you can use this command:
+**Keep this terminal running!** The proof server must stay active while using the DApp.
 
-```sh
-npm run start-testnet-remote
-```
+#### Option B: Automatic Proof Server
 
-The preceding entry point assumes you already have a proof server running locally.
-If you want one to be started automatically for you, use instead:
+This should start proof server automatically, but may fail if Docker isn't properly configured:
 
-```sh
+```bash
 npm run testnet-remote-ps
 ```
 
-Then follow the instructions from the CLI.
+If this fails with "Could not find a working container runtime strategy", use Option A instead.
 
-If you did not previously create and fund a Midnight Lace wallet, you will need to do so. Funds for testing can be requested from [the official faucet](https://midnight.network/test-faucet).
+## Run the Counter DApp
 
-You can find more information in part 2 of the [Midnight developer tutorial](https://docs.midnight.network/develop/tutorial/building).
+Open a new terminal (keep proof server running in the first one).
+
+```bash
+cd counter-cli && npm run start-testnet-remote
+```
+
+## Using the Counter DApp
+
+### Create a Wallet
+
+The CLI uses a headless wallet (separate from browser wallets like Lace) that can be called through library functions.
+
+1. Choose option `1` to build a fresh wallet
+2. The system will generate a wallet address and seed
+3. **Save both the address and seed** - you'll need them later
+
+Expected output:
+
+```
+Your wallet seed is: [64-character hex string]
+Your wallet address is: mn_shield-addr_test1...
+Your wallet balance is: 0
+```
+
+### Fund Your Wallet
+
+Before deploying contracts, you need testnet tokens.
+
+1. Copy your wallet address from the output above
+2. Visit the [testnet faucet](https://midnight.network/test-faucet)
+3. Paste your address and request funds
+4. Wait for the CLI to detect the funds (takes 2-3 minutes)
+
+Expected output:
+
+```
+Your wallet balance is: 1000000000
+```
+
+### Deploy Your Contract
+
+1. Choose option `1` to deploy a new counter contract
+2. Wait for deployment (takes ~30 seconds)
+3. **Save the contract address** for future use
+
+Expected output:
+
+```
+Deployed contract at address: [contract address]
+```
+
+### Interact with Your Contract
+
+You can now:
+
+- **Increment** the counter (submits a transaction to testnet)
+- **Display** current counter value (queries the blockchain)
+- **Exit** when done
+
+Each increment creates a real transaction on Midnight Testnet.
+
+### Reusing Your Wallet
+
+Next time you run the DApp:
+
+1. Choose option `2` to build wallet from seed
+2. Enter your saved seed
+3. Choose option `2` to join existing contract
+4. Enter your saved contract address
+
+## Useful Links
+
+- [Testnet Faucet](https://midnight.network/test-faucet) - Get testnet funds
+- [Midnight Documentation](https://docs.midnight.network/develop/tutorial/building) - Complete developer guide
+- [Compact Language Guide](https://docs.midnight.network/develop/tutorial/compact) - Smart contract language reference
+
+## Troubleshooting
+
+| Issue                                               | Solution                                                                                                                |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `compact: command not found`                        | Run `source $HOME/.local/bin/env` then `compact compile --version`                                                      |
+| `connect ECONNREFUSED 127.0.0.1:6300`               | Start proof server: `docker run -p 6300:6300 midnightnetwork/proof-server -- 'midnight-proof-server --network testnet'` |
+| Could not find a working container runtime strategy | Docker isn't running properly. Restart Docker Desktop and try again                                                     |
+| Tests fail with "Cannot find module"                | Compile contract first: `cd contract && npm run compact && npm run build && npm run test`                               |
+| Wallet seed validation errors                       | Enter complete 64-character hex string without extra spaces                                                             |
+| Node.js warnings about experimental features        | Normal warnings - don't affect functionality                                                                            |
