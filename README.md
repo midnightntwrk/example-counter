@@ -17,6 +17,7 @@ example-counter/
 
 ## Prerequisites
 
+
 ### 1. Node.js Version Check
 
 You need NodeJS version 22.15 or greater:
