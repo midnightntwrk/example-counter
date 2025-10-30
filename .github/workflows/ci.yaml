@@ -16,7 +16,17 @@ jobs:
       contents: read             # we only need to checkout code
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  #v5.0.0
+
+      - name: Prefer Google mirror globally
+        run: |
+          echo '{"registry-mirrors":["https://mirror.gcr.io"]}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+      - name: Setup Compact Compiler
+        uses: midnightntwrk/setup-compact-action@4130145456ad3f45934788dd4a65647eb283e658
+        with:
+          compact-version: '0.26.0'
 
       - name: Install Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903  #v6.0.0
@@ -25,14 +35,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Install compactc
-        env:
-          COMPACT_VERSION: 0.26.0
-        run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
-          compact update $COMPACT_VERSION
-          compact compile --version
 
       - name: Compile and test contract
         working-directory: contract
