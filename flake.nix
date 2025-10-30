@@ -44,11 +44,16 @@
             
             # Update to specific toolchain version
             "$COMPACT_DIR/compact" update ${compactVersion}
+            
+            # Patch shebang for NixOS (only needed on NixOS)
+            if [ ! -f "/bin/bash" ]; then
+              find "$COMPACT_DIR/.compact/versions/${compactVersion}" -name "compactc" -type f -exec sed -i '1s|^#!/bin/bash|#!/usr/bin/env bash|' {} \; 2>/dev/null || true
+            fi
           '';
         in
         {
           default = pkgs.mkShell {
-            packages = [ pkgs.curl pkgsUnstable.nodejs pkgs.yarn ];
+            packages = [ pkgs.curl pkgs.unzip pkgsUnstable.nodejs pkgs.yarn ];
             shellHook = ''
               ${installScript}
               export PATH="$PWD/.nix-bin:$PATH"
@@ -58,3 +63,4 @@
       );
     };
 }
+
