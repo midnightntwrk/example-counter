@@ -1,5 +1,5 @@
 {
-  description = "Example Counter – Nix flake that provides the Compact compiler per system";
+  description = "Nix flake that provides the Compact compiler per system";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
