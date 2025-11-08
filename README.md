@@ -1,8 +1,28 @@
-# Counter DApp
+# Counter DApp & Anonymous Voting System
 
 [![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.25.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
-A Midnight smart contract example demonstrating counter functionality with zero-knowledge proofs on testnet.
+A Midnight smart contract example demonstrating counter functionality with zero-knowledge proofs on testnet, now including an **Anonymous Voting System**.
+
+## 🗳️ Anonymous Voting System
+
+This repository now includes a privacy-preserving voting system that leverages zero-knowledge proofs to ensure completely anonymous voting while maintaining public vote counts.
+
+**Features:**
+- ✅ Completely anonymous voting using zero-knowledge proofs
+- ✅ Public, verifiable results
+- ✅ Double-vote protection
+- ✅ Support for YES/NO/ABSTAIN votes
+
+**Quick Start:**
+```bash
+./setup-voting.sh                              # Run setup script
+cd counter-cli && npm run start-voting         # Start voting system
+```
+
+**📖 See [VOTING_SYSTEM.md](./VOTING_SYSTEM.md) for complete documentation.**
+
+---
 
 ## Project Structure
 

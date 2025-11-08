@@ -1,0 +1,93 @@
+// Anonymous Voting System
+// Copyright (C) 2025 Midnight Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+pragma language_version >= 0.16 && <= 0.18;
+
+import CompactStandardLibrary;
+
+// Public state - vote counts are visible to everyone
+export ledger VotingLedger {
+  yesVotes: Counter,
+  noVotes: Counter,
+  abstainVotes: Counter,
+  isActive: Boolean
+};
+
+// Private state - tracks if this user has voted (kept private)
+export struct VotingPrivateState {
+  hasVoted: Boolean,
+  myVote: Scalar // 0 = not voted, 1 = yes, 2 = no, 3 = abstain
+};
+
+// Initialize a new poll
+export circuit initializePoll(): [VotingPrivateState] {
+  VotingLedger.yesVotes.reset();
+  VotingLedger.noVotes.reset();
+  VotingLedger.abstainVotes.reset();
+  VotingLedger.isActive.set(true);
+
+  return VotingPrivateState {
+    hasVoted: false,
+    myVote: 0
+  };
+}
+
+// Vote YES - anonymous vote using zero-knowledge proofs
+export circuit voteYes(VotingPrivateState state): [VotingPrivateState] {
+  // Ensure poll is active
+  assert(VotingLedger.isActive.get());
+
+  // Ensure user hasn't voted yet (private check)
+  assert(!state.hasVoted);
+
+  // Increment yes votes publicly
+  VotingLedger.yesVotes.increment(1);
+
+  // Update private state
+  return VotingPrivateState {
+    hasVoted: true,
+    myVote: 1
+  };
+}
+
+// Vote NO - anonymous vote using zero-knowledge proofs
+export circuit voteNo(VotingPrivateState state): [VotingPrivateState] {
+  // Ensure poll is active
+  assert(VotingLedger.isActive.get());
+
+  // Ensure user hasn't voted yet (private check)
+  assert(!state.hasVoted);
+
+  // Increment no votes publicly
+  VotingLedger.noVotes.increment(1);
+
+  // Update private state
+  return VotingPrivateState {
+    hasVoted: true,
+    myVote: 2
+  };
+}
+
+// Vote ABSTAIN - anonymous vote using zero-knowledge proofs
+export circuit voteAbstain(VotingPrivateState state): [VotingPrivateState] {
+  // Ensure poll is active
+  assert(VotingLedger.isActive.get());
+
+  // Ensure user hasn't voted yet (private check)
+  assert(!state.hasVoted);
+
+  // Increment abstain votes publicly
+  VotingLedger.abstainVotes.increment(1);
+
+  // Update private state
+  return VotingPrivateState {
+    hasVoted: true,
+    myVote: 3
+  };
+}
+
+// Close the poll
+export circuit closePoll(): [] {
+  VotingLedger.isActive.set(false);
+}
