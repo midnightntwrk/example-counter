@@ -227,8 +227,8 @@ Next time you run the DApp:
 ## Useful Links
 
 - [Testnet Faucet](https://midnight.network/test-faucet) - Get testnet funds
-- [Midnight Documentation](https://docs.midnight.network/develop/tutorial/building) - Complete developer guide
-- [Compact Language Guide](https://docs.midnight.network/develop/tutorial/compact) - Smart contract language reference
+- [Midnight Documentation](https://docs.midnight.network/) - Complete developer guide
+- [Compact Language Guide](https://docs.midnight.network/compact) - Smart contract language reference
 
 ## Troubleshooting
 
