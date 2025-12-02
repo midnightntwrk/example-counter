@@ -2,7 +2,7 @@ name: Scan
 
 permissions: {}
 
-# Run on pushes to any branch and pull requests
+# Run on pushes to main and pull requests
 on:
   push:
     branches: ['main']
