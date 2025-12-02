@@ -45,6 +45,11 @@ jobs:
   scan-js:
     name: Scan JavaScript/TypeScript
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, javascript-typescript]
+
     permissions:
       actions: read
       contents: read
@@ -57,16 +62,13 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
       with:
-        languages: |
-          actions
-          javascript-typescript
-          rust
+        languages: ${{matrix.language}}
         queries: security-and-quality
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
       with:
-        category: "/language:javascript-typescript"
+        category: "/language:${{matrix.language}}"
         upload: true  # Automatically uploads SARIF to GitHub
 
   scan-kics:
