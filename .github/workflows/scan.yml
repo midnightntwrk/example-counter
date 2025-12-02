@@ -93,3 +93,35 @@ jobs:
         if: always()
         with:
           sarif_file: results/results.sarif
+
+  scan-scorecard:
+    name: Scorecard Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      # Needed to publish results and get a badge
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  #v6.0.0
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard Analysis
+        uses: ossf/scorecard-action@99c09fe975337306107572b4fdf4db224cf8e2f2  #v2.4.3
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Publish results to OpenSSF REST API for public badge
+          publish_results: true
+          # Upload to code-scanning dashboard
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload results to Security tab
+      - name: Upload SARIF results to code-scanning
+        uses: github/codeql-action/upload-sarif@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
+        with:
+          sarif_file: results.sarif
