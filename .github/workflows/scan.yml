@@ -57,8 +57,11 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
       with:
-        languages: javascript-typescript
-        queries: security-and-quality  # or security-extended for more checks
+        languages: |
+          actions
+          javascript-typescript
+          rust
+        queries: security-and-quality
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
