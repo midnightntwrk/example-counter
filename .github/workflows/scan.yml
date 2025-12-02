@@ -40,3 +40,27 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
           category: 'trivy-fs'
+
+  scan-js:
+    name: Scan JavaScript/TypeScript
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write  # Required for uploading SARIF
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  #v6.0.0
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
+      with:
+        languages: javascript-typescript
+        queries: security-and-quality  # or security-extended for more checks
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
+      with:
+        category: "/language:javascript-typescript"
+        upload: true  # Automatically uploads SARIF to GitHub
