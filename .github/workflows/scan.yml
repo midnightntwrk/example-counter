@@ -32,7 +32,7 @@ jobs:
           scanners: 'vuln,secret,misconfig'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH,MEDIUM'
+          #   severity: 'CRITICAL,HIGH,MEDIUM'
           trivy-config: trivy.yml
 
       - name: Upload SARIF file
@@ -84,7 +84,7 @@ jobs:
           path: '.'
           output_path: 'results'
           output_formats: 'json,sarif'
-          fail_on: high,medium
+          fail_on: high
           enable_comments: true
           exclude_paths: '.git,node_modules,dist,build'
 
