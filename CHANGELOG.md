@@ -22,3 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.2]
 
 - Minor package version updates
+
+## [3.0.0]
+
+- Migrate to Preview network
+- Update to MidnightJS v3 and modular Wallet SDK
