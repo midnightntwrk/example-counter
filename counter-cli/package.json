@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "preview": "node --experimental-specifier-resolution=node --loader ts-node/esm src/testnet-remote.ts",
     "testnet-remote": "node --experimental-specifier-resolution=node --loader ts-node/esm src/testnet-remote.ts",
     "testnet-remote-ps": "cp -r proof-server-testnet.yml ./dist/ && node --experimental-specifier-resolution=node --loader ts-node/esm src/testnet-remote-start-proof-server.ts",
     "testnet-local": "node --experimental-specifier-resolution=node --loader ts-node/esm src/testnet-local.ts",
@@ -14,6 +15,7 @@
     "build": "rm -rf dist && tsc --project tsconfig.build.json",
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start-preview": "npm run build && npm run preview",
     "start-testnet-remote": "npm run build && npm run testnet-remote",
     "start-testnet-remote-ps": "npm run build && npm run testnet-remote-ps"
   },
