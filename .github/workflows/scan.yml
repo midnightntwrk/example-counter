@@ -84,7 +84,7 @@ jobs:
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  #v6.0.0
 
       - name: Run KICS Scan
-        uses: checkmarx/kics-github-action@6b6fc1162a0f06704e4cca6e5f8e008ab20fabe5  #v2.1.16
+        uses: checkmarx/kics-github-action@00def9108246ec656aea725db2167522d26a99d2  #v2.1.19
         with:
           path: '.'
           output_path: 'results'
