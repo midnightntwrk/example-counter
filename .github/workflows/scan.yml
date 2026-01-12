@@ -1,0 +1,133 @@
+name: Scan
+
+permissions: {}
+
+# Run on pushes to main and pull requests
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  scan-fs:
+    name: Fs scan code
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      statuses: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  #v6.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          version: 'v0.67.2'
+          scan-type: 'fs'
+          scanners: 'vuln,secret,misconfig'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          #   severity: 'CRITICAL,HIGH,MEDIUM'
+          trivy-config: trivy.yml
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@ce729e4d353d580e6cacd6a8cf2921b72e5e310a
+        if: success() || failure()
+        with:
+          sarif_file: trivy-results.sarif
+          category: 'trivy-fs'
+
+  scan-codeql:
+    name: Scan CodeQL
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, javascript-typescript]
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write  # Required for uploading SARIF
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  #v6.0.0
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
+      with:
+        languages: ${{matrix.language}}
+        queries: security-and-quality
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
+      with:
+        category: "/language:${{matrix.language}}"
+        upload: true  # Automatically uploads SARIF to GitHub
+
+  scan-kics:
+    name: KICS IaC Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  #v6.0.0
+
+      - name: Run KICS Scan
+        uses: checkmarx/kics-github-action@6b6fc1162a0f06704e4cca6e5f8e008ab20fabe5  #v2.1.16
+        with:
+          path: '.'
+          output_path: 'results'
+          output_formats: 'json,sarif'
+          fail_on: high
+          enable_comments: true
+          exclude_paths: '.git,node_modules,dist,build'
+
+      - name: Upload SARIF file to GitHub Security
+        uses: github/codeql-action/upload-sarif@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
+        if: success() || failure()
+        with:
+          sarif_file: results/results.sarif
+
+  scan-scorecard:
+    name: Scorecard Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      # Needed to publish results and get a badge
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  #v6.0.0
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard Analysis
+        uses: ossf/scorecard-action@99c09fe975337306107572b4fdf4db224cf8e2f2  #v2.4.3
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Publish results to OpenSSF REST API for public badge
+          publish_results: true
+          # Upload to code-scanning dashboard
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload results to Security tab
+      - name: Upload SARIF results to code-scanning
+        uses: github/codeql-action/upload-sarif@ce729e4d353d580e6cacd6a8cf2921b72e5e310a  #CodeQL Bundle v2.23.6
+        if: success() || failure()
+        with:
+          sarif_file: results.sarif
