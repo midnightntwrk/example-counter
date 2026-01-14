@@ -24,7 +24,7 @@
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "^0.9.0",
     "@midnight-ntwrk/ledger": "^4.0.0",
-    "@midnight-ntwrk/midnight-js-contracts": "2.0.2",
+    "@midnight-ntwrk/midnight-js-contracts": "2.1.0",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "2.0.2",
     "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "2.0.2",
     "@midnight-ntwrk/midnight-js-level-private-state-provider": "2.0.2",
