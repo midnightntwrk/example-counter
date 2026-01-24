@@ -26,7 +26,7 @@
     "@midnight-ntwrk/ledger": "^4.0.0",
     "@midnight-ntwrk/midnight-js-contracts": "2.0.2",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "2.0.2",
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "2.1.0",
     "@midnight-ntwrk/midnight-js-level-private-state-provider": "2.0.2",
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "2.0.2",
     "@midnight-ntwrk/midnight-js-types": "2.0.2",
