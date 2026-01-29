@@ -24,8 +24,8 @@ export const CompiledCounterContract =
     'Counter',
     CompiledCounter.Contract<Witnesses.CounterPrivateState>
   ).pipe(
-    CompiledContract.withWitnesses(Witnesses.witnesses),
-    CompiledContract.withCompiledFileAssets('./compiled/counter')
+    CompiledContract.withCompiledFileAssets('./compiled/counter'),
+    CompiledContract.withVacantWitnesses
   );
 
 

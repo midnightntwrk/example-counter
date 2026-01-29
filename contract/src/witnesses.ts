@@ -13,10 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { WitnessContext } from '@midnight-ntwrk/compact-runtime';
-
-import type { Ledger } from './compiled/counter/contract/index.js';
-
 export type CounterPrivateState = {
   privateCounter: number;
 }
@@ -27,9 +23,4 @@ export const createPrivateState = (privateCounter: number): CounterPrivateState 
 
 export const createInitialPrivateState = (privateCounter: number) => createPrivateState(privateCounter);
 
-export const witnesses = {
-  privateIncrement: ({ privateState }: WitnessContext<Ledger, CounterPrivateState>): [CounterPrivateState, []] => [
-    { privateCounter: privateState.privateCounter + 1 },
-    []
-  ]
-};
+export const witnesses = {};

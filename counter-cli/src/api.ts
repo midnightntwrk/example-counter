@@ -211,7 +211,7 @@ export const displayWalletBalances = async (wallet: WalletFacade): Promise<{ uns
   const shielded = state.shielded?.balances[ledger.nativeToken().raw] ?? 0n;
   const dust = state.dust?.walletBalance(new Date()) ?? 0n;
 
-  logger.info(`Unshielded balance: ${unshielded} tSTAR`);
+  logger.info(`Unshielded balance: ${unshielded} tNIGHT`);
   logger.info(`Shielded balance: ${shielded}`);
   logger.info(`Dust balance: ${dust}`);
 
