@@ -396,7 +396,7 @@ export const initWalletWithSeed = async (
     networkId: config.networkId,
     costParameters: {
       ledgerParams: ledger.LedgerParameters.initialParameters(),
-      additionalFeeOverhead: 500_000_000_000_000_000_000n, // Match testkit - 500 quintillion
+      additionalFeeOverhead: 1_000_000_000_000_000n,
       feeBlocksMargin: 5,
     },
     relayURL: new URL(config.node),
