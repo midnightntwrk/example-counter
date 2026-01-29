@@ -3,12 +3,12 @@ services:
     container_name: 'counter-proof-server'
     image: "midnightnetwork/proof-server:4.0.0"
     ports:
-      - "6300"
+      - "6300:6300"
     environment:
       RUST_BACKTRACE: "full"
   indexer:
     container_name: 'counter-indexer'
-    image: 'midnightntwrk/indexer-standalone:2.1.1'
+    image: 'midnightntwrk/indexer-standalone:3.0.0'
     ports:
       - '0:8088'
     environment:
@@ -21,10 +21,10 @@ services:
       node:
         condition: service_started
   node:
-    image: 'midnightnetwork/midnight-node:0.12.0'
+    image: 'midnightntwrk/midnight-node:0.20.0'
     container_name: 'counter-node'
     ports:
-      - "9944"
+      - "9944:9944"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9944/health" ]
       interval: 2s

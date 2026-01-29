@@ -1,7 +1,6 @@
 services:
   proof-server:
-    image: "midnightnetwork/proof-server:6.1.0-alpha.6"
-    command: ["midnight-proof-server", "--network", "preview"]
+    image: "midnightnetwork/proof-server:latest"
     ports:
       - "6300:6300"
     environment:

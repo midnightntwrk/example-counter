@@ -32,8 +32,8 @@ export interface Config {
 
 export class TestnetLocalConfig implements Config {
   logDir = path.resolve(currentDir, '..', 'logs', 'testnet-local', `${new Date().toISOString()}.log`);
-  indexer = 'http://127.0.0.1:8088/api/v1/graphql';
-  indexerWS = 'ws://127.0.0.1:8088/api/v1/graphql/ws';
+  indexer = 'http://127.0.0.1:8088/api/v3/graphql';
+  indexerWS = 'ws://127.0.0.1:8088/api/v3/graphql/ws';
   node = 'ws://127.0.0.1:9944';
   proofServer = 'http://127.0.0.1:6300';
   networkId = 'testnet';
@@ -41,8 +41,8 @@ export class TestnetLocalConfig implements Config {
 
 export class StandaloneConfig implements Config {
   logDir = path.resolve(currentDir, '..', 'logs', 'standalone', `${new Date().toISOString()}.log`);
-  indexer = 'http://127.0.0.1:8088/api/v1/graphql';
-  indexerWS = 'ws://127.0.0.1:8088/api/v1/graphql/ws';
+  indexer = 'http://127.0.0.1:8088/api/v3/graphql';
+  indexerWS = 'ws://127.0.0.1:8088/api/v3/graphql/ws';
   node = 'ws://127.0.0.1:9944';
   proofServer = 'http://127.0.0.1:6300';
   networkId = 'undeployed';
@@ -53,7 +53,7 @@ export class PreviewConfig implements Config {
   indexer = 'https://indexer.preview.midnight.network/api/v3/graphql';
   indexerWS = 'wss://indexer.preview.midnight.network/api/v3/graphql/ws';
   node = 'wss://rpc.preview.midnight.network';
-  proofServer = 'http://127.0.0.1:6300';
+  proofServer = 'https://lace-proof-pub.preview.midnight.network';
   networkId = 'preview';
 }
 
