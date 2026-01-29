@@ -13,5 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * as Counter from "./managed/counter/contract/index.js";
-export * from "./witnesses";
+import { CompiledContract } from '@midnight-ntwrk/compact-js';
+
+import * as CompiledCounter from "./compiled/counter/contract";
+import * as Witnesses from './witnesses';
+
+
+export const CompiledCounterContract =
+  CompiledContract.make<CompiledCounter.Contract<Witnesses.CounterPrivateState>>(
+    'Counter',
+    CompiledCounter.Contract<Witnesses.CounterPrivateState>
+  ).pipe(
+    CompiledContract.withWitnesses(Witnesses.witnesses),
+    CompiledContract.withCompiledFileAssets('./compiled/counter')
+  );
+
+
+export * as CompiledCounter from "./compiled/counter/contract";
+export * as Witnesses from "./witnesses";

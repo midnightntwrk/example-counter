@@ -17,10 +17,21 @@ pragma language_version >= 0.19;
 
 import CompactStandardLibrary;
 
-// public state
 export ledger round: Counter;
 
-// transition function changing public state
+witness privateIncrement(): [];
+
 export circuit increment(): [] {
   round.increment(1);
+  privateIncrement();
+}
+
+export circuit decrement(amount: Uint<16>): [] {
+  round.decrement(disclose(amount));
+  privateIncrement();
+}
+
+export circuit reset(): [] {
+  round.resetToDefault();
+  privateIncrement();
 }

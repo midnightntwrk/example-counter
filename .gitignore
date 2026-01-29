@@ -58,4 +58,4 @@ jspm_packages/
 *.sln
 
 # Compact
-managed/
+compiled/

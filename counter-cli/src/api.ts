@@ -16,8 +16,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
-import { Counter, type CounterPrivateState, witnesses } from '@midnight-ntwrk/counter-contract';
-import * as ledger from '@midnight-ntwrk/ledger-v6';
+import { CompiledCounter, Witnesses, CompiledCounterContract } from '@midnight-ntwrk/counter-contract';
+import * as ledger from '@midnight-ntwrk/ledger-v7';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
@@ -27,7 +27,7 @@ import {
   type FinalizedTxData,
   type MidnightProvider,
   type WalletProvider,
-  type BalancedProvingRecipe,
+  UnboundTransaction,
 } from '@midnight-ntwrk/midnight-js-types';
 import { assertIsContractAddress } from '@midnight-ntwrk/midnight-js-utils';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
@@ -53,12 +53,12 @@ import * as Rx from 'rxjs';
 import { WebSocket } from 'ws';
 import { Buffer } from 'buffer';
 import {
-  type CounterContract,
-  type CounterPrivateStateId,
+  CounterPrivateStateId,
   type CounterProviders,
   type DeployedCounterContract,
 } from './common-types';
 import { type Config, contractConfig } from './config';
+import { FinalizedTransaction } from '@midnight-ntwrk/ledger-v7';
 
 let logger: Logger;
 // @ts-expect-error: It's needed to enable WebSocket usage through apollo
@@ -80,12 +80,10 @@ export const getCounterLedgerState = async (
   logger.info('Checking contract ledger state...');
   const state = await providers.publicDataProvider
     .queryContractState(contractAddress)
-    .then((contractState) => (contractState != null ? Counter.ledger(contractState.data).round : null));
+    .then((contractState) => (contractState != null ? CompiledCounter.ledger(contractState.data.state).round : null));
   logger.info(`Ledger state: ${state}`);
   return state;
 };
-
-export const counterContractInstance: CounterContract = new Counter.Contract(witnesses);
 
 export const joinContract = async (
   providers: CounterProviders,
@@ -93,7 +91,7 @@ export const joinContract = async (
 ): Promise<DeployedCounterContract> => {
   const counterContract = await findDeployedContract(providers, {
     contractAddress,
-    contract: counterContractInstance,
+    compiledContract: CompiledCounterContract,
     privateStateId: 'counterPrivateState',
     initialPrivateState: { privateCounter: 0 },
   });
@@ -103,12 +101,12 @@ export const joinContract = async (
 
 export const deploy = async (
   providers: CounterProviders,
-  privateState: CounterPrivateState,
+  privateState: Witnesses.CounterPrivateState,
 ): Promise<DeployedCounterContract> => {
   logger.info('Deploying counter contract...');
   const counterContract = await deployContract(providers, {
-    contract: counterContractInstance,
-    privateStateId: 'counterPrivateState',
+    compiledContract: CompiledCounterContract,
+    privateStateId: CounterPrivateStateId,
     initialPrivateState: privateState,
   });
   logger.info(`Deployed contract at address: ${counterContract.deployTxData.public.contractAddress}`);
@@ -155,20 +153,22 @@ export const createWalletAndMidnightProvider = async (
       return walletContext.shieldedSecretKeys.encryptionPublicKey as unknown as ledger.EncPublicKey;
     },
     async balanceTx(
-      tx: ledger.UnprovenTransaction,
-      newCoins?: ledger.ShieldedCoinInfo[],
+      tx: UnboundTransaction,
       ttl?: Date,
-    ): Promise<BalancedProvingRecipe> {
+    ): Promise<FinalizedTransaction> {
       // Use the wallet facade to balance the transaction
       const txTtl = ttl ?? new Date(Date.now() + 30 * 60 * 1000); // 30 min default TTL
       // balanceTransaction returns a ProvingRecipe directly
-      const provingRecipe = await walletContext.wallet.balanceTransaction(
-        walletContext.shieldedSecretKeys,
-        walletContext.dustSecretKey,
-        tx as unknown as ledger.Transaction<ledger.SignatureEnabled, ledger.Proofish, ledger.Bindingish>,
-        txTtl,
+      const provingRecipe = await walletContext.wallet.balanceUnboundTransaction(
+        tx,
+        walletContext,
+        {
+          ttl: txTtl
+        },
       );
-      return provingRecipe as unknown as BalancedProvingRecipe;
+      const finalizedTx = await walletContext.wallet.finalizeRecipe(provingRecipe);
+      
+      return finalizedTx;
     },
     async submitTx(tx: ledger.FinalizedTransaction): Promise<ledger.TransactionId> {
       return await walletContext.wallet.submitTransaction(tx);
@@ -274,7 +274,7 @@ export const registerForDustProduction = async (walletContext: WalletContext): P
   );
 
   logger.info('Finalizing dust registration transaction...');
-  const finalizedTx = await walletContext.wallet.finalizeTransaction(recipe);
+  const finalizedTx = await walletContext.wallet.finalizeTransaction(recipe.transaction);
 
   logger.info('Submitting dust registration transaction...');
   try {
@@ -501,14 +501,15 @@ export const configureProviders = async (walletContext: WalletContext, config: C
   // Get storage password from environment or use default
   const storagePassword = process.env.MIDNIGHT_STORAGE_PASSWORD ?? 'counter-dapp-default-password';
 
+  let zkConfigProvider = new NodeZkConfigProvider<'increment'>(contractConfig.zkConfigPath);
   return {
     privateStateProvider: levelPrivateStateProvider<typeof CounterPrivateStateId>({
       privateStateStoreName: contractConfig.privateStateStoreName,
       privateStoragePasswordProvider: async () => storagePassword,
     }),
     publicDataProvider: indexerPublicDataProvider(config.indexer, config.indexerWS),
-    zkConfigProvider: new NodeZkConfigProvider<'increment'>(contractConfig.zkConfigPath),
-    proofProvider: httpClientProofProvider(config.proofServer),
+    zkConfigProvider,
+    proofProvider: httpClientProofProvider(config.proofServer, zkConfigProvider),
     walletProvider: walletAndMidnightProvider,
     midnightProvider: walletAndMidnightProvider,
   };
