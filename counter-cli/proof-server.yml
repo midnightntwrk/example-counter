@@ -1,7 +1,6 @@
 services:
   proof-server:
-    image: "midnightnetwork/proof-server:4.0.0"
-    command: ["midnight-proof-server --network undeployed"]
+    image: "midnightnetwork/proof-server:latest"
     ports:
       - "6300:6300"
     environment:

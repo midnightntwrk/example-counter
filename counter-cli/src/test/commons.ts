@@ -24,10 +24,9 @@ import {
 import path from 'path';
 import * as api from '../api';
 import * as Rx from 'rxjs';
-import { nativeToken } from '@midnight-ntwrk/ledger';
+import { nativeToken } from '@midnight-ntwrk/ledger-v7';
 import type { Logger } from 'pino';
-import type { Wallet } from '@midnight-ntwrk/wallet-api';
-import type { Resource } from '@midnight-ntwrk/wallet';
+import type { WalletContext } from '../api';
 import { expect } from 'vitest';
 
 const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
@@ -102,7 +101,7 @@ export class TestEnvironment {
   private env: StartedDockerComposeEnvironment | undefined;
   private dockerEnv: DockerComposeEnvironment | undefined;
   private container: StartedTestContainer | undefined;
-  private wallet: (Wallet & Resource) | undefined;
+  private wallet: WalletContext | undefined;
   private testConfig: TestConfiguration;
 
   constructor(logger: Logger) {
@@ -160,7 +159,7 @@ export class TestEnvironment {
   };
 
   static getProofServerContainer = async (env: string) =>
-    await new GenericContainer('midnightnetwork/proof-server:4.0.0')
+    await new GenericContainer('midnightnetwork/proof-server:latest')
       .withExposedPorts(6300)
       .withCommand([`midnight-proof-server --network ${env}`])
       .withEnvironment({ RUST_BACKTRACE: 'full' })
@@ -169,7 +168,7 @@ export class TestEnvironment {
 
   shutdown = async () => {
     if (this.wallet !== undefined) {
-      await this.wallet.close();
+      await this.wallet.wallet.stop();
     }
     if (this.env !== undefined) {
       this.logger.info('Test containers closing');
@@ -183,20 +182,14 @@ export class TestEnvironment {
 
   getWallet = async () => {
     this.logger.info('Setting up wallet');
-    this.wallet = await api.buildWalletAndWaitForFunds(
+    this.wallet = await api.buildWalletFromHexSeed(
       this.testConfig.dappConfig,
-      this.testConfig.seed,
-      this.testConfig.cacheFileName,
+      this.testConfig.seed
     );
     expect(this.wallet).not.toBeNull();
-    const state = await Rx.firstValueFrom(this.wallet.state());
-    expect(state.balances[nativeToken()].valueOf()).toBeGreaterThan(BigInt(0));
+    const state = await Rx.firstValueFrom(this.wallet.wallet.state());
+    const unshieldedBalance = state.unshielded?.balances[nativeToken().raw] ?? 0n;
+    expect(unshieldedBalance).toBeGreaterThan(BigInt(0));
     return this.wallet;
-  };
-
-  saveWalletCache = async () => {
-    if (this.wallet !== undefined) {
-      await api.saveState(this.wallet, this.testConfig.cacheFileName);
-    }
   };
 }

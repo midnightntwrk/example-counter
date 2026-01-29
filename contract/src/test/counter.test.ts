@@ -15,12 +15,11 @@
 
 import { CounterSimulator } from "./counter-simulator.js";
 import {
-  NetworkId,
   setNetworkId
 } from "@midnight-ntwrk/midnight-js-network-id";
 import { describe, it, expect } from "vitest";
 
-setNetworkId(NetworkId.Undeployed);
+setNetworkId("undeployed");
 
 describe("Counter smart contract", () => {
   it("generates initial ledger state deterministically", () => {

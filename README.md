@@ -130,7 +130,7 @@ docker pull midnightnetwork/proof-server:latest
 Then start the proof server (keep this terminal open):
 
 ```bash
-docker run -p 6300:6300 midnightnetwork/proof-server -- 'midnight-proof-server --network testnet'
+docker run -p 6300:6300 midnightnetwork/proof-server
 ```
 
 Expected output:

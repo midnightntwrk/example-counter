@@ -13,9 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This is how we type an empty object.
 export type CounterPrivateState = {
   privateCounter: number;
-};
+}
+
+export const createPrivateState = (privateCounter: number): CounterPrivateState => ({
+  privateCounter
+});
+
+export const createInitialPrivateState = (privateCounter: number) => createPrivateState(privateCounter);
 
 export const witnesses = {};
