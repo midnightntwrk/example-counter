@@ -16,7 +16,7 @@ jobs:
       contents: read             # we only need to checkout code
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  #v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  #v6.0.2
 
       - name: Prefer Google mirror globally
         run: |
@@ -24,12 +24,12 @@ jobs:
           sudo systemctl restart docker
 
       - name: Setup Compact Compiler
-        uses: midnightntwrk/setup-compact-action@4130145456ad3f45934788dd4a65647eb283e658
+        uses: midnightntwrk/setup-compact-action@836895c8fffbbea6bd986af2b17e8941ff29d1f8
         with:
           compact-version: '0.28.0'
 
       - name: Install Node.js
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f  #v6.1.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238  #v6.2.0
         with:
           node-version: '20'
 
