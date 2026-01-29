@@ -22,6 +22,7 @@ import { type Config, StandaloneConfig } from './config';
 import * as api from './api';
 import type { WalletContext } from './api';
 import 'dotenv/config';
+import { Witnesses } from '@midnight-ntwrk/counter-contract';
 
 let logger: Logger;
 
@@ -55,7 +56,7 @@ const deployOrJoin = async (providers: CounterProviders, rli: Interface): Promis
     const choice = await rli.question(DEPLOY_OR_JOIN_QUESTION);
     switch (choice) {
       case '1':
-        return await api.deploy(providers, { privateCounter: 0 });
+        return await api.deploy(providers, Witnesses.createInitialPrivateState(0));
       case '2':
         return await join(providers, rli);
       case '3':

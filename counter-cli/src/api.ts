@@ -147,10 +147,10 @@ export const createWalletAndMidnightProvider = async (
 
   return {
     getCoinPublicKey(): ledger.CoinPublicKey {
-      return walletContext.shieldedSecretKeys.coinPublicKey as unknown as ledger.CoinPublicKey;
+      return walletContext.shieldedSecretKeys.coinPublicKey;
     },
     getEncryptionPublicKey(): ledger.EncPublicKey {
-      return walletContext.shieldedSecretKeys.encryptionPublicKey as unknown as ledger.EncPublicKey;
+      return walletContext.shieldedSecretKeys.encryptionPublicKey;
     },
     async balanceTx(
       tx: UnboundTransaction,
@@ -158,15 +158,19 @@ export const createWalletAndMidnightProvider = async (
     ): Promise<FinalizedTransaction> {
       // Use the wallet facade to balance the transaction
       const txTtl = ttl ?? new Date(Date.now() + 30 * 60 * 1000); // 30 min default TTL
-      // balanceTransaction returns a ProvingRecipe directly
-      const provingRecipe = await walletContext.wallet.balanceUnboundTransaction(
-        tx,
-        walletContext,
+      const bound = tx.bind();
+      const finalizedTransactionRecipe = await walletContext.wallet.balanceFinalizedTransaction(
+        bound,
+        {
+          shieldedSecretKeys: walletContext.shieldedSecretKeys, 
+          dustSecretKey: walletContext.dustSecretKey
+        },
         {
           ttl: txTtl
         },
-      );
-      const finalizedTx = await walletContext.wallet.finalizeRecipe(provingRecipe);
+      );    
+      const signed = await walletContext.wallet.signRecipe(finalizedTransactionRecipe, (payload) => walletContext.unshieldedKeystore.signData(payload));
+      const finalizedTx = await walletContext.wallet.finalizeRecipe(signed);
       
       return finalizedTx;
     },

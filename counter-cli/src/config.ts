@@ -44,7 +44,7 @@ export class StandaloneConfig implements Config {
   indexer = 'http://127.0.0.1:8088/api/v3/graphql';
   indexerWS = 'ws://127.0.0.1:8088/api/v3/graphql/ws';
   node = 'ws://127.0.0.1:9944';
-  proofServer = 'http://127.0.0.1:6300';
+  proofServer = 'https://lace-proof-pub.preview.midnight.network';
   networkId = 'undeployed';
 }
 
