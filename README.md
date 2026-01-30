@@ -4,6 +4,12 @@
 
 A Midnight smart contract example demonstrating counter functionality with zero-knowledge proofs on testnet.
 
+
+> **Use this repo as a template. Do not fork it.**
+>  
+> This repository is intended to be used via GitHub’s “Use this template” flow.  
+> Forking this repo is discouraged, as forks are not tracked as independent projects.
+
 ## Project Structure
 
 ```
