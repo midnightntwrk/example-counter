@@ -26,8 +26,7 @@ import * as api from '../api';
 import * as Rx from 'rxjs';
 import { nativeToken } from '@midnight-ntwrk/ledger';
 import type { Logger } from 'pino';
-import type { Wallet } from '@midnight-ntwrk/wallet-api';
-import type { Resource } from '@midnight-ntwrk/wallet';
+import type { WalletContext } from '../api';
 import { expect } from 'vitest';
 
 const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
@@ -102,7 +101,7 @@ export class TestEnvironment {
   private env: StartedDockerComposeEnvironment | undefined;
   private dockerEnv: DockerComposeEnvironment | undefined;
   private container: StartedTestContainer | undefined;
-  private wallet: (Wallet & Resource) | undefined;
+  private walletCtx: WalletContext | undefined;
   private testConfig: TestConfiguration;
 
   constructor(logger: Logger) {
@@ -168,8 +167,8 @@ export class TestEnvironment {
       .start();
 
   shutdown = async () => {
-    if (this.wallet !== undefined) {
-      await this.wallet.close();
+    if (this.walletCtx !== undefined) {
+      await this.walletCtx.wallet.stop();
     }
     if (this.env !== undefined) {
       this.logger.info('Test containers closing');
@@ -183,20 +182,13 @@ export class TestEnvironment {
 
   getWallet = async () => {
     this.logger.info('Setting up wallet');
-    this.wallet = await api.buildWalletAndWaitForFunds(
+    this.walletCtx = await api.buildWalletAndWaitForFunds(
       this.testConfig.dappConfig,
       this.testConfig.seed,
-      this.testConfig.cacheFileName,
     );
-    expect(this.wallet).not.toBeNull();
-    const state = await Rx.firstValueFrom(this.wallet.state());
-    expect(state.balances[nativeToken()].valueOf()).toBeGreaterThan(BigInt(0));
-    return this.wallet;
-  };
-
-  saveWalletCache = async () => {
-    if (this.wallet !== undefined) {
-      await api.saveState(this.wallet, this.testConfig.cacheFileName);
-    }
+    expect(this.walletCtx).not.toBeNull();
+    const state = await Rx.firstValueFrom(this.walletCtx.wallet.state());
+    expect(state.unshielded.balances[nativeToken()]?.valueOf()).toBeGreaterThan(BigInt(0));
+    return this.walletCtx;
   };
 }

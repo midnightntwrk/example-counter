@@ -14,7 +14,7 @@
 // limitations under the License.
 
 import path from 'node:path';
-import { NetworkId, setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 export const currentDir = path.resolve(new URL(import.meta.url).pathname, '..');
 
 export const contractConfig = {
@@ -37,7 +37,7 @@ export class TestnetLocalConfig implements Config {
   node = 'http://127.0.0.1:9944';
   proofServer = 'http://127.0.0.1:6300';
   constructor() {
-    setNetworkId(NetworkId.TestNet);
+    setNetworkId('testnet');
   }
 }
 
@@ -48,7 +48,7 @@ export class StandaloneConfig implements Config {
   node = 'http://127.0.0.1:9944';
   proofServer = 'http://127.0.0.1:6300';
   constructor() {
-    setNetworkId(NetworkId.Undeployed);
+    setNetworkId('undeployed');
   }
 }
 
@@ -59,6 +59,6 @@ export class TestnetRemoteConfig implements Config {
   node = 'https://rpc.testnet-02.midnight.network';
   proofServer = 'http://127.0.0.1:6300';
   constructor() {
-    setNetworkId(NetworkId.TestNet);
+    setNetworkId('testnet');
   }
 }

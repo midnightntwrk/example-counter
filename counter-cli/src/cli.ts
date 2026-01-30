@@ -13,8 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Resource } from '@midnight-ntwrk/wallet';
-import { type Wallet } from '@midnight-ntwrk/wallet-api';
+import { type WalletContext } from './api';
 import { stdin as input, stdout as output } from 'node:process';
 import { createInterface, type Interface } from 'node:readline/promises';
 import { type Logger } from 'pino';
@@ -90,9 +89,9 @@ const mainLoop = async (providers: CounterProviders, rli: Interface): Promise<vo
   }
 };
 
-const buildWalletFromSeed = async (config: Config, rli: Interface): Promise<Wallet & Resource> => {
+const buildWalletFromSeed = async (config: Config, rli: Interface): Promise<WalletContext> => {
   const seed = await rli.question('Enter your wallet seed: ');
-  return await api.buildWalletAndWaitForFunds(config, seed, '');
+  return await api.buildWalletAndWaitForFunds(config, seed);
 };
 
 const WALLET_LOOP_QUESTION = `
@@ -102,9 +101,9 @@ You can do one of the following:
   3. Exit
 Which would you like to do? `;
 
-const buildWallet = async (config: Config, rli: Interface): Promise<(Wallet & Resource) | null> => {
+const buildWallet = async (config: Config, rli: Interface): Promise<WalletContext | null> => {
   if (config instanceof StandaloneConfig) {
-    return await api.buildWalletAndWaitForFunds(config, GENESIS_MINT_WALLET_SEED, '');
+    return await api.buildWalletAndWaitForFunds(config, GENESIS_MINT_WALLET_SEED);
   }
   while (true) {
     const choice = await rli.question(WALLET_LOOP_QUESTION);
@@ -146,10 +145,10 @@ export const run = async (config: Config, _logger: Logger, dockerEnv?: DockerCom
       config.proofServer = mapContainerPort(env, config.proofServer, 'counter-proof-server');
     }
   }
-  const wallet = await buildWallet(config, rli);
+  const walletCtx = await buildWallet(config, rli);
   try {
-    if (wallet !== null) {
-      const providers = await api.configureProviders(wallet, config);
+    if (walletCtx !== null) {
+      const providers = await api.configureProviders(walletCtx, config);
       await mainLoop(providers, rli);
     }
   } catch (e) {
@@ -168,8 +167,8 @@ export const run = async (config: Config, _logger: Logger, dockerEnv?: DockerCom
       logger.error(`Error closing readline interface: ${e}`);
     } finally {
       try {
-        if (wallet !== null) {
-          await wallet.close();
+        if (walletCtx !== null) {
+          await walletCtx.wallet.stop();
         }
       } catch (e) {
         logger.error(`Error closing wallet: ${e}`);
