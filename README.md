@@ -1,6 +1,6 @@
 # Counter DApp
 
-[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.25.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.28.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
 A Midnight smart contract example demonstrating counter functionality with zero-knowledge proofs on testnet.
 
@@ -47,10 +47,10 @@ If Docker is not found: [Install Docker Desktop](https://docs.docker.com/desktop
 
 The Compact compiler converts smart contracts written in the Compact language into executable circuits for zero-knowledge proof generation.
 
-#### Download and install compact compiler
+#### Download and install the Compact version manager
 
 ```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/download/compact-v0.4.0/compact-installer.sh | sh
 ```
 
 #### Add to your PATH (choose based on your shell)
@@ -60,21 +60,21 @@ source $HOME/.local/bin/env                    # bash/zsh/sh
 source $HOME/.local/bin/env.fish              # fish
 ```
 
-#### Update to the version required by this project (optional)
+#### Install the compiler version required by this project
 
-```
-compact update 0.25.0
+```bash
+compact update 0.28.0
 ```
 
 #### Verify installation
 
 ```bash
-compact compile --version
+compactc --version
 ```
 
-Expected output: `0.25.0`.
+Expected output: `0.28.0`.
 
-> If command not found: Restart your terminal and try the `source` command again.
+> If command not found: Restart your terminal and try the `source` command again. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed installation troubleshooting.
 
 ### Install Project Dependencies
 
@@ -234,7 +234,7 @@ Next time you run the DApp:
 
 | Issue                                               | Solution                                                                                                                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `compact: command not found`                        | Run `source $HOME/.local/bin/env` then `compact compile --version`                                                      |
+| `compact: command not found`                        | Run `source $HOME/.local/bin/env` then `compactc --version`                                                             |
 | `connect ECONNREFUSED 127.0.0.1:6300`               | Start proof server: `docker run -p 6300:6300 midnightnetwork/proof-server -- 'midnight-proof-server --network testnet'` |
 | Could not find a working container runtime strategy | Docker isn't running properly. Restart Docker Desktop and try again                                                     |
 | Tests fail with "Cannot find module"                | Compile contract first: `cd contract && npm run compact && npm run build && npm run test`                               |
