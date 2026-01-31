@@ -2,7 +2,7 @@
 
 [![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.28.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
-A Midnight smart contract example demonstrating counter functionality with zero-knowledge proofs on testnet.
+A Midnight smart contract example demonstrating counter functionality with zero-knowledge proofs on preprod.
 
 ## Project Structure
 
@@ -119,45 +119,34 @@ cd ../counter-cli && npm run build
 
 The proof server generates zero-knowledge proofs for transactions locally to protect private data. It must be running before you can deploy or interact with contracts.
 
-#### Option A: Manual Proof Server (Recommended)
-
-Pull the Docker image:
+Pull and start the proof server (keep this terminal open):
 
 ```bash
-docker pull midnightnetwork/proof-server:latest
+docker compose -f proof-server-preprod.yml up
 ```
 
-Then start the proof server (keep this terminal open):
-
-```bash
-docker run -p 6300:6300 midnightnetwork/proof-server -- 'midnight-proof-server --network testnet'
-```
-
-Expected output:
+Wait for it to download ZK key material and start. Expected output:
 
 ```
-INFO midnight_proof_server: This proof server processes transactions for TestNet.
-INFO actix_server::server: starting service: "actix-web-service-0.0.0.0:6300"
+INFO actix_server::builder: starting 24 workers
+INFO actix_server::server: Actix runtime found; starting in Actix runtime
+INFO actix_server::server: starting service: "actix-web-service-0.0.0.0:6300", workers: 24, listening on: 0.0.0.0:6300
 ```
 
 **Keep this terminal running!** The proof server must stay active while using the DApp.
 
-#### Option B: Automatic Proof Server
-
-This should start proof server automatically, but may fail if Docker isn't properly configured:
+You can verify the proof server is running:
 
 ```bash
-npm run testnet-remote-ps
+curl http://localhost:6300/version
 ```
-
-If this fails with "Could not find a working container runtime strategy", use Option A instead.
 
 ## Run the Counter DApp
 
 Open a new terminal (keep proof server running in the first one).
 
 ```bash
-cd counter-cli && npm run start-testnet-remote
+cd counter-cli && npm run preprod
 ```
 
 ## Using the Counter DApp
@@ -167,25 +156,28 @@ cd counter-cli && npm run start-testnet-remote
 The CLI uses a headless wallet (separate from browser wallets like Lace) that can be called through library functions.
 
 1. Choose option `1` to build a fresh wallet
-2. The system will generate a wallet address and seed
-3. **Save both the address and seed** - you'll need them later
+2. The system will generate a wallet seed and addresses
+3. **Save the seed and all addresses** - you'll need them later
 
 Expected output:
 
 ```
 Your wallet seed is: [64-character hex string]
-Your wallet address is: mn_shield-addr_test1...
+Shielded coin public key: [hex string]
+Shielded encryption public key: [hex string]
+Unshielded address: [bech32m address]
+Dust address: [hex string]
 Your wallet balance is: 0
 ```
 
 ### Fund Your Wallet
 
-Before deploying contracts, you need testnet tokens.
+Before deploying contracts, you need preprod tokens.
 
-1. Copy your wallet address from the output above
-2. Visit the [testnet faucet](https://midnight.network/test-faucet)
+1. Copy your unshielded address from the output above
+2. Visit the [preprod faucet](https://faucet.preprod.midnight.network)
 3. Paste your address and request funds
-4. Wait for the CLI to detect the funds (takes 2-3 minutes)
+4. Wait for the CLI to detect the funds
 
 Expected output:
 
@@ -196,7 +188,7 @@ Your wallet balance is: 1000000000
 ### Deploy Your Contract
 
 1. Choose option `1` to deploy a new counter contract
-2. Wait for deployment (takes ~30 seconds)
+2. Wait for deployment
 3. **Save the contract address** for future use
 
 Expected output:
@@ -209,11 +201,11 @@ Deployed contract at address: [contract address]
 
 You can now:
 
-- **Increment** the counter (submits a transaction to testnet)
+- **Increment** the counter (submits a transaction to preprod)
 - **Display** current counter value (queries the blockchain)
 - **Exit** when done
 
-Each increment creates a real transaction on Midnight Testnet.
+Each increment creates a real transaction on Midnight Preprod.
 
 ### Reusing Your Wallet
 
@@ -226,17 +218,17 @@ Next time you run the DApp:
 
 ## Useful Links
 
-- [Testnet Faucet](https://midnight.network/test-faucet) - Get testnet funds
+- [Preprod Faucet](https://faucet.preprod.midnight.network) - Get preprod funds
 - [Midnight Documentation](https://docs.midnight.network/) - Complete developer guide
 - [Compact Language Guide](https://docs.midnight.network/compact) - Smart contract language reference
 
 ## Troubleshooting
 
-| Issue                                               | Solution                                                                                                                |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `compact: command not found`                        | Run `source $HOME/.local/bin/env` then `compactc --version`                                                             |
-| `connect ECONNREFUSED 127.0.0.1:6300`               | Start proof server: `docker run -p 6300:6300 midnightnetwork/proof-server -- 'midnight-proof-server --network testnet'` |
-| Could not find a working container runtime strategy | Docker isn't running properly. Restart Docker Desktop and try again                                                     |
-| Tests fail with "Cannot find module"                | Compile contract first: `cd contract && npm run compact && npm run build && npm run test`                               |
-| Wallet seed validation errors                       | Enter complete 64-character hex string without extra spaces                                                             |
-| Node.js warnings about experimental features        | Normal warnings - don't affect functionality                                                                            |
+| Issue                                               | Solution                                                                                    |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `compact: command not found`                        | Run `source $HOME/.local/bin/env` then `compactc --version`                                 |
+| `connect ECONNREFUSED 127.0.0.1:6300`               | Start proof server: `docker compose -f proof-server-preprod.yml up`                         |
+| Could not find a working container runtime strategy | Docker isn't running properly. Restart Docker Desktop and try again                         |
+| Tests fail with "Cannot find module"                | Compile contract first: `cd contract && npm run compact && npm run build && npm run test`   |
+| Wallet seed validation errors                       | Enter complete 64-character hex string without extra spaces                                 |
+| Node.js warnings about experimental features        | Normal warnings - don't affect functionality                                                |

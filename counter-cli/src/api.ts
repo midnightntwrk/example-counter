@@ -17,8 +17,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { Counter, type CounterPrivateState, witnesses } from '@midnight-ntwrk/counter-contract';
-import { nativeToken, type TransactionId } from '@midnight-ntwrk/ledger';
 import * as ledger from '@midnight-ntwrk/ledger-v7';
+import { unshieldedToken } from '@midnight-ntwrk/ledger-v7';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
@@ -55,11 +55,20 @@ import { assertIsContractAddress, toHex } from '@midnight-ntwrk/midnight-js-util
 import { getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { Buffer } from 'buffer';
+import {
+  MidnightBech32m,
+  ShieldedAddress,
+  ShieldedCoinPublicKey,
+  ShieldedEncryptionPublicKey,
+} from '@midnight-ntwrk/wallet-sdk-address-format';
 
 let logger: Logger;
+
+// Required for GraphQL subscriptions (wallet sync) to work in Node.js
 // @ts-expect-error: It's needed to enable WebSocket usage through apollo
 globalThis.WebSocket = WebSocket;
 
+// Pre-compile the counter contract with ZK circuit assets
 const counterCompiledContract = CompiledContract.make('counter', Counter.Contract).pipe(
   CompiledContract.withVacantWitnesses,
   CompiledContract.withCompiledFileAssets(contractConfig.zkConfigPath),
@@ -136,6 +145,11 @@ export const displayCounterValue = async (
   return { contractAddress, counterValue };
 };
 
+/**
+ * Create the unified WalletProvider & MidnightProvider for midnight-js.
+ * This bridges the wallet-sdk-facade to the midnight-js contract API by
+ * implementing balance, sign, finalize, and submit operations.
+ */
 export const createWalletAndMidnightProvider = async (
   ctx: WalletContext,
 ): Promise<WalletProvider & MidnightProvider> => {
@@ -163,26 +177,22 @@ export const createWalletAndMidnightProvider = async (
   };
 };
 
+/** Wait until the wallet has fully synced with the network. Returns the synced state. */
 export const waitForSync = (wallet: WalletFacade) =>
   Rx.firstValueFrom(
     wallet.state().pipe(
       Rx.throttleTime(5_000),
-      Rx.tap((state) => {
-        logger.info(`Waiting for sync. Synced: ${state.isSynced}`);
-      }),
       Rx.filter((state) => state.isSynced),
     ),
   );
 
-export const waitForFunds = (wallet: WalletFacade) =>
+/** Wait until the wallet has a non-zero unshielded balance. Returns the balance. */
+export const waitForFunds = (wallet: WalletFacade): Promise<bigint> =>
   Rx.firstValueFrom(
     wallet.state().pipe(
       Rx.throttleTime(10_000),
-      Rx.tap((state) => {
-        logger.info(`Waiting for funds. Synced: ${state.isSynced}`);
-      }),
       Rx.filter((state) => state.isSynced),
-      Rx.map((s) => s.unshielded.balances[nativeToken()] ?? 0n),
+      Rx.map((s) => s.unshielded.balances[unshieldedToken().raw] ?? 0n),
       Rx.filter((balance) => balance > 0n),
     ),
   );
@@ -220,6 +230,10 @@ const buildDustConfig = ({ indexer, indexerWS, node, proofServer }: Config) => (
   relayURL: new URL(node.replace(/^http/, 'ws')),
 });
 
+/**
+ * Derive HD wallet keys for all three roles (Zswap, NightExternal, Dust)
+ * from a hex-encoded seed using BIP-44 style derivation at account 0, index 0.
+ */
 const deriveKeysFromSeed = (seed: string) => {
   const hdWallet = HDWallet.fromSeed(Buffer.from(seed, 'hex'));
   if (hdWallet.type !== 'seedOk') {
@@ -239,48 +253,102 @@ const deriveKeysFromSeed = (seed: string) => {
   return derivationResult.keys;
 };
 
+/**
+ * Formats a token balance for display (e.g. 1000000000 -> "1,000,000,000").
+ */
+const formatBalance = (balance: bigint): string => balance.toLocaleString();
+
+/**
+ * Prints a formatted wallet summary to the console, showing all three
+ * wallet types (Shielded, Unshielded, Dust) with their addresses and balances.
+ */
+const printWalletSummary = (
+  seed: string,
+  state: any,
+  unshieldedKeystore: UnshieldedKeystore,
+) => {
+  const networkId = getNetworkId();
+  const unshieldedBalance = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
+
+  // Build the bech32m shielded address from coin + encryption public keys
+  const coinPubKey = ShieldedCoinPublicKey.fromHexString(state.shielded.coinPublicKey.toHexString());
+  const encPubKey = ShieldedEncryptionPublicKey.fromHexString(state.shielded.encryptionPublicKey.toHexString());
+  const shieldedAddress = MidnightBech32m.encode(networkId, new ShieldedAddress(coinPubKey, encPubKey)).toString();
+
+  const DIV = '──────────────────────────────────────────────────────────────';
+
+  console.log(`
+${DIV}
+  Wallet Overview                            Network: ${networkId}
+${DIV}
+  Seed: ${seed}
+${DIV}
+
+  Shielded (ZSwap)
+  └─ Address: ${shieldedAddress}
+
+  Unshielded
+  ├─ Address: ${unshieldedKeystore.getBech32Address()}
+  └─ Balance: ${formatBalance(unshieldedBalance)} tNight
+
+  Dust
+  └─ Address: ${state.dust.dustAddress}
+
+${DIV}`);
+};
+
+/**
+ * Build (or restore) a wallet from a hex seed, then wait for the wallet
+ * to sync and receive funds before returning.
+ *
+ * Steps:
+ *   1. Derive HD keys (Zswap, NightExternal, Dust) from the seed
+ *   2. Create the three sub-wallets (Shielded, Unshielded, Dust)
+ *   3. Start the WalletFacade and wait for sync
+ *   4. Display a wallet summary with all addresses
+ *   5. If balance is zero, wait for incoming funds (e.g. from faucet)
+ */
 export const buildWalletAndWaitForFunds = async (
   config: Config,
   seed: string,
 ): Promise<WalletContext> => {
-  logger.info('Building wallet from seed...');
-  const shieldedConfig = buildShieldedConfig(config);
-  const unshieldedConfig = buildUnshieldedConfig(config);
-  const dustConfig = buildDustConfig(config);
-  const keys = deriveKeysFromSeed(seed);
+  console.log('\n  Building wallet...');
 
+  // Derive HD keys from seed
+  const keys = deriveKeysFromSeed(seed);
   const shieldedSecretKeys = ledger.ZswapSecretKeys.fromSeed(keys[Roles.Zswap]);
   const dustSecretKey = ledger.DustSecretKey.fromSeed(keys[Roles.Dust]);
   const unshieldedKeystore = createKeystore(keys[Roles.NightExternal], getNetworkId());
 
-  const shieldedWallet = ShieldedWallet(shieldedConfig).startWithSecretKeys(shieldedSecretKeys);
-  const unshieldedWallet = UnshieldedWallet(unshieldedConfig).startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
-  const dustWallet = DustWallet(dustConfig).startWithSecretKey(
+  // Initialize the three sub-wallets
+  const shieldedWallet = ShieldedWallet(buildShieldedConfig(config)).startWithSecretKeys(shieldedSecretKeys);
+  const unshieldedWallet = UnshieldedWallet(buildUnshieldedConfig(config)).startWithPublicKey(
+    PublicKey.fromKeyStore(unshieldedKeystore),
+  );
+  const dustWallet = DustWallet(buildDustConfig(config)).startWithSecretKey(
     dustSecretKey,
     ledger.LedgerParameters.initialParameters().dust,
   );
 
+  // Start the unified wallet facade
   const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
   await wallet.start(shieldedSecretKeys, dustSecretKey);
 
-  logger.info(`Your wallet seed is: ${seed}`);
+  // Wait for the wallet to sync with the network
+  console.log('  Syncing with network...');
+  const syncedState = await waitForSync(wallet);
 
-  const state = await Rx.firstValueFrom(wallet.state());
-  logger.info(`Shielded coin public key: ${state.shielded.coinPublicKey.toHexString()}`);
-  logger.info(`Shielded encryption public key: ${state.shielded.encryptionPublicKey.toHexString()}`);
-  logger.info(`Unshielded address: ${unshieldedKeystore.getBech32Address()}`);
-  logger.info(`Dust address: ${state.dust.dustAddress}`);
+  // Display the wallet summary
+  printWalletSummary(seed, syncedState, unshieldedKeystore);
 
-  const balance = state.unshielded.balances[nativeToken()] ?? 0n;
+  // Check if wallet has funds; if not, wait for incoming tokens
+  const balance = syncedState.unshielded.balances[unshieldedToken().raw] ?? 0n;
   if (balance === 0n) {
-    logger.info(`Your wallet balance is: 0`);
-    logger.info(`Waiting to receive tokens...`);
-    await waitForFunds(wallet);
+    console.log('  Wallet has no funds. Send tNight to the unshielded address above.');
+    console.log('  Waiting for incoming tokens...\n');
+    const fundedBalance = await waitForFunds(wallet);
+    console.log(`\n  Funds received: ${formatBalance(fundedBalance)} tNight\n`);
   }
-
-  const fundedState = await Rx.firstValueFrom(wallet.state());
-  const fundedBalance = fundedState.unshielded.balances[nativeToken()] ?? 0n;
-  logger.info(`Your wallet balance is: ${fundedBalance}`);
 
   return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore };
 };
@@ -288,12 +356,17 @@ export const buildWalletAndWaitForFunds = async (
 export const buildFreshWallet = async (config: Config): Promise<WalletContext> =>
   await buildWalletAndWaitForFunds(config, toHex(Buffer.from(generateRandomSeed())));
 
+/**
+ * Configure all midnight-js providers needed for contract deployment and interaction.
+ * This wires together the wallet, proof server, indexer, and private state storage.
+ */
 export const configureProviders = async (ctx: WalletContext, config: Config) => {
   const walletAndMidnightProvider = await createWalletAndMidnightProvider(ctx);
   const zkConfigProvider = new NodeZkConfigProvider<CounterCircuits>(contractConfig.zkConfigPath);
   return {
     privateStateProvider: levelPrivateStateProvider<typeof CounterPrivateStateId>({
       privateStateStoreName: contractConfig.privateStateStoreName,
+      walletProvider: walletAndMidnightProvider,
     }),
     publicDataProvider: indexerPublicDataProvider(config.indexer, config.indexerWS),
     zkConfigProvider,

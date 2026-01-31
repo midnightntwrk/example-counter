@@ -25,40 +25,84 @@ import * as api from './api';
 let logger: Logger;
 
 /**
- * This seed gives access to tokens minted in the genesis block of a local development node - only
- * used in standalone networks to build a wallet with initial funds.
+ * This seed gives access to tokens minted in the genesis block of a local development node.
+ * Only used in standalone networks to build a wallet with initial funds.
  */
 const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
 
-const DEPLOY_OR_JOIN_QUESTION = `
-You can do one of the following:
-  1. Deploy a new counter contract
-  2. Join an existing counter contract
-  3. Exit
-Which would you like to do? `;
+// ─── Display Helpers ────────────────────────────────────────────────────────
 
-const MAIN_LOOP_QUESTION = `
-You can do one of the following:
-  1. Increment
-  2. Display current counter value
-  3. Exit
-Which would you like to do? `;
+const BANNER = `
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║              Midnight Counter Example                        ║
+║              ─────────────────────                           ║
+║              A privacy-preserving smart contract demo        ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+`;
 
-const join = async (providers: CounterProviders, rli: Interface): Promise<DeployedCounterContract> => {
-  const contractAddress = await rli.question('What is the contract address (in hex)? ');
-  return await api.joinContract(providers, contractAddress);
+const DIVIDER = '──────────────────────────────────────────────────────────────';
+
+// ─── Menu Prompts ───────────────────────────────────────────────────────────
+
+const WALLET_MENU = `
+${DIVIDER}
+  Wallet Setup
+${DIVIDER}
+  [1] Create a new wallet
+  [2] Restore wallet from seed
+  [3] Exit
+${'─'.repeat(62)}
+> `;
+
+const CONTRACT_MENU = `
+${DIVIDER}
+  Contract Actions
+${DIVIDER}
+  [1] Deploy a new counter contract
+  [2] Join an existing counter contract
+  [3] Exit
+${'─'.repeat(62)}
+> `;
+
+const COUNTER_MENU = `
+${DIVIDER}
+  Counter Actions
+${DIVIDER}
+  [1] Increment counter
+  [2] Display current counter value
+  [3] Exit
+${'─'.repeat(62)}
+> `;
+
+// ─── Wallet Setup ───────────────────────────────────────────────────────────
+
+/** Prompt the user for a seed phrase and restore a wallet from it. */
+const buildWalletFromSeed = async (config: Config, rli: Interface): Promise<WalletContext> => {
+  const seed = await rli.question('Enter your wallet seed: ');
+  return await api.buildWalletAndWaitForFunds(config, seed);
 };
 
-const deployOrJoin = async (providers: CounterProviders, rli: Interface): Promise<DeployedCounterContract | null> => {
+/**
+ * Wallet creation flow.
+ * - Standalone configs skip the menu and use the genesis seed automatically.
+ * - All other configs present a menu to create or restore a wallet.
+ */
+const buildWallet = async (config: Config, rli: Interface): Promise<WalletContext | null> => {
+  // Standalone mode: use the pre-funded genesis wallet
+  if (config instanceof StandaloneConfig) {
+    return await api.buildWalletAndWaitForFunds(config, GENESIS_MINT_WALLET_SEED);
+  }
+
   while (true) {
-    const choice = await rli.question(DEPLOY_OR_JOIN_QUESTION);
-    switch (choice) {
+    const choice = await rli.question(WALLET_MENU);
+    switch (choice.trim()) {
       case '1':
-        return await api.deploy(providers, { privateCounter: 0 });
+        return await api.buildFreshWallet(config);
       case '2':
-        return await join(providers, rli);
+        return await buildWalletFromSeed(config, rli);
       case '3':
-        logger.info('Exiting...');
         return null;
       default:
         logger.error(`Invalid choice: ${choice}`);
@@ -66,14 +110,46 @@ const deployOrJoin = async (providers: CounterProviders, rli: Interface): Promis
   }
 };
 
+// ─── Contract Interaction ───────────────────────────────────────────────────
+
+/** Prompt for a contract address and join an existing deployed contract. */
+const joinContract = async (providers: CounterProviders, rli: Interface): Promise<DeployedCounterContract> => {
+  const contractAddress = await rli.question('Enter the contract address (hex): ');
+  return await api.joinContract(providers, contractAddress);
+};
+
+/**
+ * Deploy or join flow. Returns the contract handle, or null if the user exits.
+ */
+const deployOrJoin = async (providers: CounterProviders, rli: Interface): Promise<DeployedCounterContract | null> => {
+  while (true) {
+    const choice = await rli.question(CONTRACT_MENU);
+    switch (choice.trim()) {
+      case '1':
+        return await api.deploy(providers, { privateCounter: 0 });
+      case '2':
+        return await joinContract(providers, rli);
+      case '3':
+        return null;
+      default:
+        logger.error(`Invalid choice: ${choice}`);
+    }
+  }
+};
+
+/**
+ * Main interaction loop. Once a contract is deployed/joined, the user
+ * can increment the counter or query its current value.
+ */
 const mainLoop = async (providers: CounterProviders, rli: Interface): Promise<void> => {
   const counterContract = await deployOrJoin(providers, rli);
   if (counterContract === null) {
     return;
   }
+
   while (true) {
-    const choice = await rli.question(MAIN_LOOP_QUESTION);
-    switch (choice) {
+    const choice = await rli.question(COUNTER_MENU);
+    switch (choice.trim()) {
       case '1':
         await api.increment(counterContract);
         break;
@@ -81,7 +157,6 @@ const mainLoop = async (providers: CounterProviders, rli: Interface): Promise<vo
         await api.displayCounterValue(providers, counterContract);
         break;
       case '3':
-        logger.info('Exiting...');
         return;
       default:
         logger.error(`Invalid choice: ${choice}`);
@@ -89,99 +164,94 @@ const mainLoop = async (providers: CounterProviders, rli: Interface): Promise<vo
   }
 };
 
-const buildWalletFromSeed = async (config: Config, rli: Interface): Promise<WalletContext> => {
-  const seed = await rli.question('Enter your wallet seed: ');
-  return await api.buildWalletAndWaitForFunds(config, seed);
-};
+// ─── Docker Port Mapping ────────────────────────────────────────────────────
 
-const WALLET_LOOP_QUESTION = `
-You can do one of the following:
-  1. Build a fresh wallet
-  2. Build wallet from a seed
-  3. Exit
-Which would you like to do? `;
-
-const buildWallet = async (config: Config, rli: Interface): Promise<WalletContext | null> => {
-  if (config instanceof StandaloneConfig) {
-    return await api.buildWalletAndWaitForFunds(config, GENESIS_MINT_WALLET_SEED);
-  }
-  while (true) {
-    const choice = await rli.question(WALLET_LOOP_QUESTION);
-    switch (choice) {
-      case '1':
-        return await api.buildFreshWallet(config);
-      case '2':
-        return await buildWalletFromSeed(config, rli);
-      case '3':
-        logger.info('Exiting...');
-        return null;
-      default:
-        logger.error(`Invalid choice: ${choice}`);
-    }
-  }
-};
-
+/** Map a container's first exposed port into the config URL. */
 const mapContainerPort = (env: StartedDockerComposeEnvironment, url: string, containerName: string) => {
   const mappedUrl = new URL(url);
   const container = env.getContainer(containerName);
-
   mappedUrl.port = String(container.getFirstMappedPort());
-
   return mappedUrl.toString().replace(/\/+$/, '');
 };
 
+// ─── Entry Point ────────────────────────────────────────────────────────────
+
+/**
+ * Main entry point for the CLI.
+ *
+ * Flow:
+ *   1. (Optional) Start Docker containers for proof server / node / indexer
+ *   2. Build or restore a wallet and wait for it to be funded
+ *   3. Configure midnight-js providers (proof server, indexer, wallet, private state)
+ *   4. Enter the contract deploy/join and counter interaction loop
+ *   5. Clean up: close wallet, readline, and docker environment
+ */
 export const run = async (config: Config, _logger: Logger, dockerEnv?: DockerComposeEnvironment): Promise<void> => {
   logger = _logger;
   api.setLogger(_logger);
-  const rli = createInterface({ input, output, terminal: true });
-  let env;
-  if (dockerEnv !== undefined) {
-    env = await dockerEnv.up();
 
-    if (config instanceof StandaloneConfig) {
-      config.indexer = mapContainerPort(env, config.indexer, 'counter-indexer');
-      config.indexerWS = mapContainerPort(env, config.indexerWS, 'counter-indexer');
-      config.node = mapContainerPort(env, config.node, 'counter-node');
-      config.proofServer = mapContainerPort(env, config.proofServer, 'counter-proof-server');
-    }
-  }
-  const walletCtx = await buildWallet(config, rli);
+  // Print the title banner
+  console.log(BANNER);
+
+  const rli = createInterface({ input, output, terminal: true });
+  let env: StartedDockerComposeEnvironment | undefined;
+
   try {
-    if (walletCtx !== null) {
-      const providers = await api.configureProviders(walletCtx, config);
-      await mainLoop(providers, rli);
-    }
-  } catch (e) {
-    if (e instanceof Error) {
-      logger.error(`Found error '${e.message}'`);
-      logger.info('Exiting...');
-      logger.debug(`${e.stack}`);
-    } else {
-      throw e;
-    }
-  } finally {
-    try {
-      rli.close();
-      rli.removeAllListeners();
-    } catch (e) {
-      logger.error(`Error closing readline interface: ${e}`);
-    } finally {
-      try {
-        if (walletCtx !== null) {
-          await walletCtx.wallet.stop();
-        }
-      } catch (e) {
-        logger.error(`Error closing wallet: ${e}`);
-      } finally {
-        try {
-          if (env !== undefined) {
-            await env.down();
-            logger.info('Goodbye');
-          }
-        } catch (e) {
-          logger.error(`Error shutting down docker environment: ${e}`);
-        }
+    // Step 1: Start Docker environment if provided (e.g. local proof server)
+    if (dockerEnv !== undefined) {
+      env = await dockerEnv.up();
+
+      // In standalone mode, remap ports to the dynamically assigned container ports
+      if (config instanceof StandaloneConfig) {
+        config.indexer = mapContainerPort(env, config.indexer, 'counter-indexer');
+        config.indexerWS = mapContainerPort(env, config.indexerWS, 'counter-indexer');
+        config.node = mapContainerPort(env, config.node, 'counter-node');
+        config.proofServer = mapContainerPort(env, config.proofServer, 'counter-proof-server');
       }
     }
+
+    // Step 2: Build wallet (create new or restore from seed)
+    const walletCtx = await buildWallet(config, rli);
+    if (walletCtx === null) {
+      return;
+    }
+
+    try {
+      // Step 3: Configure midnight-js providers
+      console.log('  Configuring providers...');
+      const providers = await api.configureProviders(walletCtx, config);
+      console.log('  Providers configured.\n');
+
+      // Step 4: Enter the contract interaction loop
+      await mainLoop(providers, rli);
+    } catch (e) {
+      if (e instanceof Error) {
+        logger.error(`Error: ${e.message}`);
+        logger.debug(`${e.stack}`);
+      } else {
+        throw e;
+      }
+    } finally {
+      // Step 5a: Stop the wallet
+      try {
+        await walletCtx.wallet.stop();
+      } catch (e) {
+        logger.error(`Error stopping wallet: ${e}`);
+      }
+    }
+  } finally {
+    // Step 5b: Close readline and Docker environment
+    rli.close();
+    rli.removeAllListeners();
+
+    if (env !== undefined) {
+      try {
+        await env.down();
+      } catch (e) {
+        logger.error(`Error shutting down docker environment: ${e}`);
+      }
+    }
+
+    logger.info('Goodbye.');
   }
 };

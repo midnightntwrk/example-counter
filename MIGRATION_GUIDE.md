@@ -350,11 +350,26 @@ const finalized = await wallet.finalizeRecipe(signed);
 wallet.submitTransaction(tx);
 ```
 
+### Token Type — Critical Breaking Change
+
+The old `nativeToken()` from `@midnight-ntwrk/ledger` (v4) returns a **tagged 68-character hex** token type (`02000000...0000`). The new wallet SDK stores balances keyed by **raw 64-character hex** token types from `@midnight-ntwrk/ledger-v7`.
+
+If you use the wrong token type for balance lookups, the wallet will appear to have zero balance even when funds are present.
+
+```diff
+- import { nativeToken } from '@midnight-ntwrk/ledger';
+- const balance = state.unshielded.balances[nativeToken()];
++ import { unshieldedToken } from '@midnight-ntwrk/ledger-v7';
++ const balance = state.unshielded.balances[unshieldedToken().raw];
+```
+
+> **Debugging tip**: If your wallet shows `Synced: true` but zero balance, log `state.unshielded.balances` and compare the actual key (`0000...0000`, 64 chars) against what your lookup function returns. If you see `02000...0000` (68 chars), you're still using the old `nativeToken()`.
+
 ### State Shape Changes
 
 ```diff
 - state.syncProgress?.synced        → state.isSynced
-- state.balances[nativeToken()]     → state.unshielded.balances[nativeToken()]
+- state.balances[nativeToken()]     → state.unshielded.balances[unshieldedToken().raw]
 ```
 
 ### Lifecycle Changes
@@ -370,10 +385,60 @@ wallet.submitTransaction(tx);
 - `WalletBuilder` — replaced by direct sub-wallet construction
 - `toZswapNetworkId()` — no longer needed, facade uses string network IDs natively
 
+### Private State Provider — Encryption Required
+
+`levelPrivateStateProvider` now **requires** either a `walletProvider` or `privateStoragePasswordProvider` for encrypting private state storage. Passing neither throws an error at runtime.
+
+```diff
+  privateStateProvider: levelPrivateStateProvider<typeof CounterPrivateStateId>({
+    privateStateStoreName: contractConfig.privateStateStoreName,
++   walletProvider: walletAndMidnightProvider,
+  }),
+```
+
+You must provide **exactly one** of:
+- `walletProvider` — uses the wallet's encryption public key (recommended when using wallet-sdk-facade)
+- `privateStoragePasswordProvider: () => string` — a function returning a custom password (min 16 chars)
+
+Providing both will also throw an error.
+
+### Address Formatting
+
+The wallet SDK provides bech32m-encoded addresses for all wallet types via `@midnight-ntwrk/wallet-sdk-address-format`:
+
+```typescript
+import {
+  MidnightBech32m, ShieldedAddress,
+  ShieldedCoinPublicKey, ShieldedEncryptionPublicKey,
+} from '@midnight-ntwrk/wallet-sdk-address-format';
+
+// Shielded address (mn_shield-addr_<network>1...)
+const coinPubKey = ShieldedCoinPublicKey.fromHexString(state.shielded.coinPublicKey.toHexString());
+const encPubKey = ShieldedEncryptionPublicKey.fromHexString(state.shielded.encryptionPublicKey.toHexString());
+const shieldedAddr = MidnightBech32m.encode(networkId, new ShieldedAddress(coinPubKey, encPubKey)).toString();
+
+// Unshielded address (mn_addr_<network>1...)
+const unshieldedAddr = unshieldedKeystore.getBech32Address();
+
+// Dust address (mn_dust_<network>1...)
+const dustAddr = state.dust.dustAddress;
+```
+
+**Important**: `UnshieldedKeystore` uses `getBech32Address()` (a method), not `.address` (a property).
+
+Address format reference:
+| Type | Prefix | Example |
+|------|--------|---------|
+| Shielded | `mn_shield-addr_<network>1...` | `mn_shield-addr_preprod1q...` |
+| Unshielded | `mn_addr_<network>1...` | `mn_addr_preprod1q...` |
+| Dust | `mn_dust_<network>1...` | `mn_dust_preprod1w...` |
+
 ### Known Issues
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
+| Wallet shows zero balance despite receiving funds | Using `nativeToken()` (68-char tagged) instead of `unshieldedToken().raw` (64-char raw) for balance lookup | Replace `nativeToken()` with `unshieldedToken().raw` from `@midnight-ntwrk/ledger-v7` |
+| `Either privateStoragePasswordProvider or walletProvider must be provided` | `levelPrivateStateProvider` now requires encryption config | Pass `walletProvider` or `privateStoragePasswordProvider` in config |
 | `Cannot find package '@midnight-ntwrk/wallet-sdk-address-format'` | Transitive dep not hoisted | Add `@midnight-ntwrk/wallet-sdk-address-format` as direct dependency |
 | `Unknown field "zswapLedgerEvents"` at runtime | Local standalone indexer too old for new wallet SDK | Update docker images to versions compatible with wallet-sdk-facade |
 | `Unknown field "dustLedgerEvents"` at runtime | Same as above | Same — update indexer docker images |
@@ -401,6 +466,29 @@ The wallet-sdk-facade and midnight-js 3.0.0 require updated docker images with G
 ```
 
 Note: The registry changed from `midnightnetwork/` and `midnightntwrk/` to `ghcr.io/midnight-ntwrk/`.
+
+For **Preprod/Preview** deployments where you only need a local proof server (indexer and node are remote):
+
+```yaml
+# proof-server-preprod.yml
+services:
+  proof-server:
+    image: "midnightnetwork/proof-server:latest"
+    command: ["midnight-proof-server -v"]
+    ports:
+      - "6300:6300"
+    environment:
+      RUST_BACKTRACE: "full"
+```
+
+### Proof Server — CLI Flag Changes
+
+The proof server `7.0.0` **no longer accepts** the `--network` flag. Use `-v` for verbose mode only:
+
+```diff
+- command: ["midnight-proof-server", "--network", "testnet"]
++ command: ["midnight-proof-server -v"]
+```
 
 ### New Indexer Environment Variables
 
@@ -489,4 +577,24 @@ Network configs were updated to use the new GraphQL v3 paths and target the Prev
 
 ---
 
-*Migration complete. All sections covered: Compact compiler, Contract pragma, JS dependencies, Wallet SDK, Docker infrastructure, and Network configuration.*
+## 7. Preprod Deployment Checklist
+
+Quick reference for deploying a DApp to Preprod:
+
+1. **Proof server**: Run locally via Docker (`docker compose -f proof-server-preprod.yml up -d`)
+2. **Wallet**: Create or restore from seed — the app connects to remote Preprod indexer and RPC
+3. **Fund wallet**: Send tNight to the **unshielded** address via [https://faucet.preprod.midnight.network](https://faucet.preprod.midnight.network)
+4. **Deploy contract**: Once funds are detected, deploy your contract through the DApp
+
+### Common Pitfalls
+
+| Pitfall | Resolution |
+|---------|------------|
+| Wallet shows zero balance after faucet | Ensure you're using `unshieldedToken().raw` (not `nativeToken()`) — see Section 4 |
+| `Either privateStoragePasswordProvider or walletProvider must be provided` | Pass `walletProvider` to `levelPrivateStateProvider` — see Section 4 |
+| Proof server fails with "unexpected argument '--network'" | Remove `--network` flag, use `-v` only — see Section 5 |
+| `@midnight-ntwrk/wallet-sdk-address-format` not found | Add it as a direct dependency in `package.json` |
+
+---
+
+*Migration guide covering: Compact compiler, Contract pragma, JS dependencies (midnight-js 3.0.0), Wallet SDK (wallet-sdk-facade), Docker infrastructure, Network configuration, and Preprod deployment.*
