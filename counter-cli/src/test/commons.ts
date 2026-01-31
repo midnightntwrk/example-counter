@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Config, StandaloneConfig, currentDir, TestnetRemoteConfig } from '../config';
+import { type Config, StandaloneConfig, currentDir, PreviewConfig } from '../config';
 import {
   DockerComposeEnvironment,
   GenericContainer,
@@ -66,7 +66,7 @@ export function parseArgs(required: string[]): TestConfiguration {
     }
   }
 
-  let cfg: Config = new TestnetRemoteConfig();
+  let cfg: Config = new PreviewConfig();
   let env = '';
   let psMode = 'undeployed';
   let cacheFileName = '';
@@ -77,9 +77,9 @@ export function parseArgs(required: string[]): TestConfiguration {
       throw new Error('TEST_ENV environment variable is not defined.');
     }
     switch (env) {
-      case 'testnet':
-        cfg = new TestnetRemoteConfig();
-        psMode = 'testnet';
+      case 'preview':
+        cfg = new PreviewConfig();
+        psMode = 'preview';
         cacheFileName = `${seed.substring(0, 7)}-${psMode}.state`;
         break;
       default:

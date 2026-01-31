@@ -15,7 +15,11 @@
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start-testnet-remote": "npm run build && npm run testnet-remote",
-    "start-testnet-remote-ps": "npm run build && npm run testnet-remote-ps"
+    "start-testnet-remote-ps": "npm run build && npm run testnet-remote-ps",
+    "preprod": "node --experimental-specifier-resolution=node --loader ts-node/esm src/preprod-local.ts",
+    "preprod-ps": "docker compose -f proof-server-preprod.yml pull && node --experimental-specifier-resolution=node --loader ts-node/esm src/preprod-start-proof-server.ts",
+    "start-preprod": "npm run build && npm run preprod",
+    "start-preprod-ps": "npm run build && npm run preprod-ps"
   },
   "dependencies": {
     "@midnight-ntwrk/counter-contract": "*"

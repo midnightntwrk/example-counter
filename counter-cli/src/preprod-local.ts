@@ -15,8 +15,8 @@
 
 import { createLogger } from './logger-utils.js';
 import { run } from './cli.js';
-import { PreviewConfig } from './config.js';
+import { PreprodConfig } from './config.js';
 
-const config = new PreviewConfig();
+const config = new PreprodConfig();
 const logger = await createLogger(config.logDir);
 await run(config, logger);

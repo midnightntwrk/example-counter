@@ -15,8 +15,8 @@
 
 import { createLogger } from './logger-utils.js';
 import { run } from './cli.js';
-import { TestnetRemoteConfig } from './config.js';
+import { PreviewConfig } from './config.js';
 
-const config = new TestnetRemoteConfig();
+const config = new PreviewConfig();
 const logger = await createLogger(config.logDir);
 await run(config, logger);

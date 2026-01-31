@@ -266,6 +266,11 @@ export const buildWalletAndWaitForFunds = async (
   logger.info(`Your wallet seed is: ${seed}`);
 
   const state = await Rx.firstValueFrom(wallet.state());
+  logger.info(`Shielded coin public key: ${state.shielded.coinPublicKey.toHexString()}`);
+  logger.info(`Shielded encryption public key: ${state.shielded.encryptionPublicKey.toHexString()}`);
+  logger.info(`Unshielded address: ${unshieldedKeystore.getBech32Address()}`);
+  logger.info(`Dust address: ${state.dust.dustAddress}`);
+
   const balance = state.unshielded.balances[nativeToken()] ?? 0n;
   if (balance === 0n) {
     logger.info(`Your wallet balance is: 0`);
