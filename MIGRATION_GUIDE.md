@@ -331,24 +331,94 @@ Each sub-wallet requires different config fields:
 }
 ```
 
-### WalletProvider Bridge
+### WalletProvider Bridge — signRecipe Bug Workaround
 
-The `WalletProvider` / `MidnightProvider` interface used by midnight-js is bridged from the facade:
+The `WalletProvider` / `MidnightProvider` interface used by midnight-js is bridged from the facade. However, **`wallet.signRecipe()` has a bug** that causes `"Failed to clone intent"` errors when signing proven transactions.
+
+#### The Bug
+
+In `@midnight-ntwrk/wallet-sdk-unshielded-wallet` v1.0.0, `TransactionOps.addSignature()` clones intents via `Intent.deserialize()` with a hardcoded `'pre-proof'` type marker. This works for `UnprovenTransaction` (which has `PreProof` intents), but fails for `UnboundTransaction` (which has `Proof` intents after `proveTx()`). The WASM deserializer cannot parse proof-format bytes using the pre-proof marker.
+
+The bug is in `TransactionOps.ts` line ~101:
+```typescript
+// BUG: hardcoded 'pre-proof' fails for proven (UnboundTransaction) intents
+ledger.Intent.deserialize<ledger.SignatureEnabled, ledger.PreProof, ledger.PreBinding>(
+  'signature',
+  'pre-proof',  // ← should be 'proof' for UnboundTransaction
+  'pre-binding',
+  originalIntent.serialize(),
+)
+```
+
+#### Side Effect: DUST Locked on Failure
+
+When this error occurs, DUST coins allocated during `balanceUnboundTransaction()` become stuck in a "pending" state. The wallet SDK does not release pending coins on transaction failure (documented known issue in wallet SDK 1.0.0). The wallet must be restarted to recover them.
+
+#### The Workaround
+
+Instead of calling `wallet.signRecipe()`, implement signing manually with the correct proof marker for each transaction type:
 
 ```typescript
-// State access — note .toHexString() for key types
-const state = await Rx.firstValueFrom(wallet.state().pipe(Rx.filter((s) => s.isSynced)));
-state.shielded.coinPublicKey.toHexString();       // getCoinPublicKey
-state.shielded.encryptionPublicKey.toHexString();  // getEncryptionPublicKey
+import * as ledger from '@midnight-ntwrk/ledger-v7';
 
-// Transaction balancing — 3-step recipe flow
-const recipe = await wallet.balanceUnboundTransaction(tx, { shieldedSecretKeys, dustSecretKey }, { ttl });
-const signed = await wallet.signRecipe(recipe, (payload) => unshieldedKeystore.signData(payload));
-const finalized = await wallet.finalizeRecipe(signed);
+/**
+ * Sign all unshielded offers in a transaction's intents, using the correct
+ * proof marker for Intent.deserialize.
+ */
+const signTransactionIntents = (
+  tx: { intents?: Map<number, any> },
+  signFn: (payload: Uint8Array) => ledger.Signature,
+  proofMarker: 'proof' | 'pre-proof',
+): void => {
+  if (!tx.intents || tx.intents.size === 0) return;
 
-// Submission
-wallet.submitTransaction(tx);
+  for (const segment of tx.intents.keys()) {
+    const intent = tx.intents.get(segment);
+    if (!intent) continue;
+
+    const cloned = ledger.Intent.deserialize(
+      'signature',
+      proofMarker,   // Use the correct marker for the transaction type
+      'pre-binding',
+      intent.serialize(),
+    );
+
+    const sigData = cloned.signatureData(segment);
+    const signature = signFn(sigData);
+
+    if (cloned.fallibleUnshieldedOffer) {
+      const sigs = cloned.fallibleUnshieldedOffer.inputs.map(
+        (_: any, i: number) => cloned.fallibleUnshieldedOffer!.signatures.at(i) ?? signature,
+      );
+      cloned.fallibleUnshieldedOffer = cloned.fallibleUnshieldedOffer.addSignatures(sigs);
+    }
+
+    if (cloned.guaranteedUnshieldedOffer) {
+      const sigs = cloned.guaranteedUnshieldedOffer.inputs.map(
+        (_: any, i: number) => cloned.guaranteedUnshieldedOffer!.signatures.at(i) ?? signature,
+      );
+      cloned.guaranteedUnshieldedOffer = cloned.guaranteedUnshieldedOffer.addSignatures(sigs);
+    }
+
+    tx.intents.set(segment, cloned);
+  }
+};
+
+// In balanceTx:
+async balanceTx(tx, ttl?) {
+  const recipe = await wallet.balanceUnboundTransaction(tx, keys, { ttl });
+
+  const signFn = (payload: Uint8Array) => unshieldedKeystore.signData(payload);
+  signTransactionIntents(recipe.baseTransaction, signFn, 'proof');       // proven tx
+  if (recipe.balancingTransaction) {
+    signTransactionIntents(recipe.balancingTransaction, signFn, 'pre-proof'); // wallet-created tx
+  }
+
+  return wallet.finalizeRecipe(recipe);
+}
 ```
+
+**Key insight**: After `proveTx()`, the base transaction is an `UnboundTransaction` with `Proof` intents (use `'proof'`). The balancing transaction created by the wallet is an `UnprovenTransaction` with `PreProof` intents (use `'pre-proof'`).
 
 ### Token Type — Critical Breaking Change
 
@@ -433,10 +503,24 @@ Address format reference:
 | Unshielded | `mn_addr_<network>1...` | `mn_addr_preprod1q...` |
 | Dust | `mn_dust_<network>1...` | `mn_dust_preprod1w...` |
 
+### Dust Registration for Fee Generation
+
+On Preprod/Preview, NIGHT tokens generate DUST over time, but only after UTXOs are explicitly registered for dust generation via an on-chain transaction. This must happen before any contract deployment or interaction.
+
+The registration flow:
+1. Check if dust is already available from a previous session
+2. Filter for unregistered NIGHT coins
+3. Call `wallet.registerNightUtxosForDustGeneration()` with the coins and signing function
+4. Wait for the wallet to report a non-zero dust balance
+
+DUST balance accrues over time once registered. Initial DUST generation may take a minute or two.
+
 ### Known Issues
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
+| `Failed to clone intent` during deploy/call | `signRecipe` uses hardcoded `'pre-proof'` marker for all intents, but proven transactions have `'proof'` intents | Bypass `signRecipe` and sign manually with correct proof markers — see workaround above |
+| DUST balance drops to 0 after failed transaction | Pending coins not released on failure (wallet SDK 1.0.0 known issue) | Restart the wallet to recover pending DUST |
 | Wallet shows zero balance despite receiving funds | Using `nativeToken()` (68-char tagged) instead of `unshieldedToken().raw` (64-char raw) for balance lookup | Replace `nativeToken()` with `unshieldedToken().raw` from `@midnight-ntwrk/ledger-v7` |
 | `Either privateStoragePasswordProvider or walletProvider must be provided` | `levelPrivateStateProvider` now requires encryption config | Pass `walletProvider` or `privateStoragePasswordProvider` in config |
 | `Cannot find package '@midnight-ntwrk/wallet-sdk-address-format'` | Transitive dep not hoisted | Add `@midnight-ntwrk/wallet-sdk-address-format` as direct dependency |
@@ -562,6 +646,7 @@ Network configs were updated to use the new GraphQL v3 paths and target the Prev
 | RPC Node | `https://rpc.preprod.midnight.network` |
 | Indexer HTTP | `https://indexer.preprod.midnight.network/api/v3/graphql` |
 | Indexer WS | `wss://indexer.preprod.midnight.network/api/v3/graphql/ws` |
+| Faucet | `https://faucet.preprod.midnight.network` |
 | Proof Server | `http://localhost:6300` (local) |
 | NetworkId | `preprod` |
 
@@ -581,15 +666,18 @@ Network configs were updated to use the new GraphQL v3 paths and target the Prev
 
 Quick reference for deploying a DApp to Preprod:
 
-1. **Proof server**: Run locally via Docker (`docker compose -f proof-server-preprod.yml up -d`)
+1. **Proof server**: Run locally via Docker (`docker compose -f proof-server-preprod.yml up`)
 2. **Wallet**: Create or restore from seed — the app connects to remote Preprod indexer and RPC
 3. **Fund wallet**: Send tNight to the **unshielded** address via [https://faucet.preprod.midnight.network](https://faucet.preprod.midnight.network)
-4. **Deploy contract**: Once funds are detected, deploy your contract through the DApp
+4. **Wait for DUST**: After funding, NIGHT UTXOs are registered for dust generation automatically. Wait for DUST to accrue before deploying.
+5. **Deploy contract**: Once DUST balance is non-zero, deploy your contract through the DApp
 
 ### Common Pitfalls
 
 | Pitfall | Resolution |
 |---------|------------|
+| `Failed to clone intent` during deploy | Wallet SDK signing bug — bypass `signRecipe()` with manual signing using correct proof markers (see Section 4) |
+| DUST drops to 0 after failed deploy | Known wallet SDK issue — restart wallet to release pending coins |
 | Wallet shows zero balance after faucet | Ensure you're using `unshieldedToken().raw` (not `nativeToken()`) — see Section 4 |
 | `Either privateStoragePasswordProvider or walletProvider must be provided` | Pass `walletProvider` to `levelPrivateStateProvider` — see Section 4 |
 | Proof server fails with "unexpected argument '--network'" | Remove `--network` flag, use `-v` only — see Section 5 |

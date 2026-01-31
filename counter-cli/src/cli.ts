@@ -44,7 +44,7 @@ const BANNER = `
 
 const DIVIDER = '──────────────────────────────────────────────────────────────';
 
-// ─── Menu Prompts ───────────────────────────────────────────────────────────
+// ─── Menu Helpers ──────────────────────────────────────────────────────────
 
 const WALLET_MENU = `
 ${DIVIDER}
@@ -56,19 +56,22 @@ ${DIVIDER}
 ${'─'.repeat(62)}
 > `;
 
-const CONTRACT_MENU = `
+/** Build the contract actions menu, showing current DUST balance in the header. */
+const contractMenu = (dustBalance: string) => `
 ${DIVIDER}
-  Contract Actions
+  Contract Actions${dustBalance ? `                    DUST: ${dustBalance}` : ''}
 ${DIVIDER}
   [1] Deploy a new counter contract
   [2] Join an existing counter contract
-  [3] Exit
+  [3] Monitor DUST balance
+  [4] Exit
 ${'─'.repeat(62)}
 > `;
 
-const COUNTER_MENU = `
+/** Build the counter actions menu, showing current DUST balance in the header. */
+const counterMenu = (dustBalance: string) => `
 ${DIVIDER}
-  Counter Actions
+  Counter Actions${dustBalance ? `                     DUST: ${dustBalance}` : ''}
 ${DIVIDER}
   [1] Increment counter
   [2] Display current counter value
@@ -112,6 +115,16 @@ const buildWallet = async (config: Config, rli: Interface): Promise<WalletContex
 
 // ─── Contract Interaction ───────────────────────────────────────────────────
 
+/** Format dust balance for menu headers. */
+const getDustLabel = async (wallet: api.WalletContext['wallet']): Promise<string> => {
+  try {
+    const dust = await api.getDustBalance(wallet);
+    return dust.available.toLocaleString();
+  } catch {
+    return '';
+  }
+};
+
 /** Prompt for a contract address and join an existing deployed contract. */
 const joinContract = async (providers: CounterProviders, rli: Interface): Promise<DeployedCounterContract> => {
   const contractAddress = await rli.question('Enter the contract address (hex): ');
@@ -119,20 +132,72 @@ const joinContract = async (providers: CounterProviders, rli: Interface): Promis
 };
 
 /**
- * Deploy or join flow. Returns the contract handle, or null if the user exits.
+ * Start the DUST monitor. Shows a live-updating balance display
+ * that runs until the user presses Enter.
  */
-const deployOrJoin = async (providers: CounterProviders, rli: Interface): Promise<DeployedCounterContract | null> => {
+const startDustMonitor = async (wallet: api.WalletContext['wallet'], rli: Interface): Promise<void> => {
+  console.log('');
+  // Use readline question to wait for Enter — the monitor will render above this line
+  const stopPromise = rli.question('  Press Enter to return to menu...\n').then(() => {});
+  await api.monitorDustBalance(wallet, stopPromise);
+  console.log('');
+};
+
+/**
+ * Deploy or join flow. Returns the contract handle, or null if the user exits.
+ * Errors during deploy/join are caught and displayed — the user stays in the menu.
+ */
+const deployOrJoin = async (
+  providers: CounterProviders,
+  walletCtx: api.WalletContext,
+  rli: Interface,
+): Promise<DeployedCounterContract | null> => {
   while (true) {
-    const choice = await rli.question(CONTRACT_MENU);
+    const dustLabel = await getDustLabel(walletCtx.wallet);
+    const choice = await rli.question(contractMenu(dustLabel));
     switch (choice.trim()) {
       case '1':
-        return await api.deploy(providers, { privateCounter: 0 });
+        try {
+          const contract = await api.withStatus('Deploying counter contract', () =>
+            api.deploy(providers, { privateCounter: 0 }),
+          );
+          console.log(`  Contract deployed at: ${contract.deployTxData.public.contractAddress}\n`);
+          return contract;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.log(`\n  ✗ Deploy failed: ${msg}`);
+          // Log the full cause chain to help debug WASM/ledger errors
+          if (e instanceof Error && e.cause) {
+            let cause: unknown = e.cause;
+            let depth = 0;
+            while (cause && depth < 5) {
+              const causeMsg = cause instanceof Error ? `${cause.message}\n      ${cause.stack?.split('\n').slice(1, 3).join('\n      ') ?? ''}` : String(cause);
+              console.log(`    cause: ${causeMsg}`);
+              cause = cause instanceof Error ? cause.cause : undefined;
+              depth++;
+            }
+          }
+          if (msg.toLowerCase().includes('dust') || msg.toLowerCase().includes('no dust')) {
+            console.log('    Insufficient DUST for transaction fees. Use option [3] to monitor your balance.');
+          }
+          console.log('');
+        }
+        break;
       case '2':
-        return await joinContract(providers, rli);
+        try {
+          return await joinContract(providers, rli);
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.log(`  ✗ Failed to join contract: ${msg}\n`);
+        }
+        break;
       case '3':
+        await startDustMonitor(walletCtx.wallet, rli);
+        break;
+      case '4':
         return null;
       default:
-        logger.error(`Invalid choice: ${choice}`);
+        console.log(`  Invalid choice: ${choice}`);
     }
   }
 };
@@ -141,17 +206,27 @@ const deployOrJoin = async (providers: CounterProviders, rli: Interface): Promis
  * Main interaction loop. Once a contract is deployed/joined, the user
  * can increment the counter or query its current value.
  */
-const mainLoop = async (providers: CounterProviders, rli: Interface): Promise<void> => {
-  const counterContract = await deployOrJoin(providers, rli);
+const mainLoop = async (
+  providers: CounterProviders,
+  walletCtx: api.WalletContext,
+  rli: Interface,
+): Promise<void> => {
+  const counterContract = await deployOrJoin(providers, walletCtx, rli);
   if (counterContract === null) {
     return;
   }
 
   while (true) {
-    const choice = await rli.question(COUNTER_MENU);
+    const dustLabel = await getDustLabel(walletCtx.wallet);
+    const choice = await rli.question(counterMenu(dustLabel));
     switch (choice.trim()) {
       case '1':
-        await api.increment(counterContract);
+        try {
+          await api.withStatus('Incrementing counter', () => api.increment(counterContract));
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.log(`  ✗ Increment failed: ${msg}\n`);
+        }
         break;
       case '2':
         await api.displayCounterValue(providers, counterContract);
@@ -159,7 +234,7 @@ const mainLoop = async (providers: CounterProviders, rli: Interface): Promise<vo
       case '3':
         return;
       default:
-        logger.error(`Invalid choice: ${choice}`);
+        console.log(`  Invalid choice: ${choice}`);
     }
   }
 };
@@ -218,12 +293,13 @@ export const run = async (config: Config, _logger: Logger, dockerEnv?: DockerCom
 
     try {
       // Step 3: Configure midnight-js providers
-      console.log('  Configuring providers...');
-      const providers = await api.configureProviders(walletCtx, config);
-      console.log('  Providers configured.\n');
+      const providers = await api.withStatus('Configuring providers', () =>
+        api.configureProviders(walletCtx, config),
+      );
+      console.log('');
 
       // Step 4: Enter the contract interaction loop
-      await mainLoop(providers, rli);
+      await mainLoop(providers, walletCtx, rli);
     } catch (e) {
       if (e instanceof Error) {
         logger.error(`Error: ${e.message}`);
