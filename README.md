@@ -143,13 +143,13 @@ The CLI uses a headless wallet (separate from browser wallets like Lace).
 
 ### Step 3: Wait for DUST
 
-After receiving tNight, the CLI automatically registers your NIGHT UTXOs for dust generation. DUST is the non-transferable fee token required for all transactions on Midnight.
+After receiving tNight, the CLI automatically registers your NIGHT UTXOs for dust generation. DUST is the non-transferable fee resource required for all transactions on Midnight.
 
 The CLI shows progress:
 
 ```
   ✓ Registering 1 NIGHT UTXO(s) for dust generation
-  ✓ Waiting for dust tokens to generate
+  ✓ Waiting for dust to generate
   ✓ Configuring providers
 ```
 
