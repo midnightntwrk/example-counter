@@ -1,7 +1,7 @@
 services:
   proof-server:
     container_name: 'counter-proof-server'
-    image: 'ghcr.io/midnight-ntwrk/proof-server:7.0.0'
+    image: 'midnightntwrk/proof-server:7.0.0'
     command: ['midnight-proof-server -v']
     ports:
       - '6300'
@@ -16,7 +16,7 @@ services:
 
   indexer:
     container_name: 'counter-indexer'
-    image: 'ghcr.io/midnight-ntwrk/indexer-standalone:3.0.0'
+    image: 'midnightntwrk/indexer-standalone:3.0.0'
     ports:
       - '0:8088'
     environment:
@@ -38,7 +38,7 @@ services:
         condition: service_healthy
 
   node:
-    image: 'ghcr.io/midnight-ntwrk/midnight-node:0.20.0'
+    image: 'midnightntwrk/midnight-node:0.20.0'
     container_name: 'counter-node'
     ports:
       - '9944'

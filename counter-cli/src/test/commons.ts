@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Config, StandaloneConfig, currentDir, PreviewConfig } from '../config';
+import { type Config, StandaloneConfig, currentDir, PreviewConfig, PreprodConfig } from '../config';
 import {
   DockerComposeEnvironment,
   GenericContainer,
@@ -24,7 +24,7 @@ import {
 import path from 'path';
 import * as api from '../api';
 import * as Rx from 'rxjs';
-import { nativeToken } from '@midnight-ntwrk/ledger';
+import { unshieldedToken } from '@midnight-ntwrk/ledger-v7';
 import type { Logger } from 'pino';
 import type { WalletContext } from '../api';
 import { expect } from 'vitest';
@@ -80,6 +80,11 @@ export function parseArgs(required: string[]): TestConfiguration {
       case 'preview':
         cfg = new PreviewConfig();
         psMode = 'preview';
+        cacheFileName = `${seed.substring(0, 7)}-${psMode}.state`;
+        break;
+      case 'preprod':
+        cfg = new PreprodConfig();
+        psMode = 'preprod';
         cacheFileName = `${seed.substring(0, 7)}-${psMode}.state`;
         break;
       default:
@@ -158,10 +163,10 @@ export class TestEnvironment {
     return mappedUrl.toString().replace(/\/+$/, '');
   };
 
-  static getProofServerContainer = async (env: string) =>
-    await new GenericContainer('midnightnetwork/proof-server:4.0.0')
+  static getProofServerContainer = async (_env: string) =>
+    await new GenericContainer('midnightnetwork/proof-server:latest')
       .withExposedPorts(6300)
-      .withCommand([`midnight-proof-server --network ${env}`])
+      .withCommand(['midnight-proof-server -v'])
       .withEnvironment({ RUST_BACKTRACE: 'full' })
       .withWaitStrategy(Wait.forLogMessage('Actix runtime found; starting in Actix runtime', 1))
       .start();
@@ -188,7 +193,7 @@ export class TestEnvironment {
     );
     expect(this.walletCtx).not.toBeNull();
     const state = await Rx.firstValueFrom(this.walletCtx.wallet.state());
-    expect(state.unshielded.balances[nativeToken()]?.valueOf()).toBeGreaterThan(BigInt(0));
+    expect(state.unshielded.balances[unshieldedToken().raw] ?? 0n).toBeGreaterThan(0n);
     return this.walletCtx;
   };
 }

@@ -5,21 +5,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "testnet-remote": "node --experimental-specifier-resolution=node --loader ts-node/esm src/testnet-remote.ts",
-    "testnet-remote-ps": "cp -r proof-server-testnet.yml ./dist/ && node --experimental-specifier-resolution=node --loader ts-node/esm src/testnet-remote-start-proof-server.ts",
-    "testnet-local": "node --experimental-specifier-resolution=node --loader ts-node/esm src/testnet-local.ts",
     "standalone": "docker compose -f standalone.yml pull && node --experimental-specifier-resolution=node --loader ts-node/esm src/standalone.ts",
     "test-api": "docker compose -f standalone.yml pull && DEBUG='testcontainers' vitest run",
-    "test-against-testnet": "RUN_ENV_TESTS=true TEST_ENV=testnet TEST_WALLET_SEED=1dec0dd58fbe4d3206ef960aebff95a77e09dffbd19f3e9439d23fe6de4fcdd1 vitest run",
     "build": "rm -rf dist && tsc --project tsconfig.build.json",
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "start-testnet-remote": "npm run build && npm run testnet-remote",
-    "start-testnet-remote-ps": "npm run build && npm run testnet-remote-ps",
+    "preview": "node --experimental-specifier-resolution=node --loader ts-node/esm src/preview-local.ts",
+    "preview-ps": "docker compose -f proof-server.yml pull && node --experimental-specifier-resolution=node --loader ts-node/esm src/preview-start-proof-server.ts",
     "preprod": "node --experimental-specifier-resolution=node --loader ts-node/esm src/preprod-local.ts",
-    "preprod-ps": "docker compose -f proof-server-preprod.yml pull && node --experimental-specifier-resolution=node --loader ts-node/esm src/preprod-start-proof-server.ts",
-    "start-preprod": "npm run build && npm run preprod",
-    "start-preprod-ps": "npm run build && npm run preprod-ps"
+    "preprod-ps": "docker compose -f proof-server.yml pull && node --experimental-specifier-resolution=node --loader ts-node/esm src/preprod-start-proof-server.ts"
   },
   "dependencies": {
     "@midnight-ntwrk/counter-contract": "*"

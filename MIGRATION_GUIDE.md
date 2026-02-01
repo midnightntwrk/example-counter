@@ -540,16 +540,16 @@ The wallet-sdk-facade and midnight-js 3.0.0 require updated docker images with G
 
 ```diff
 - image: "midnightnetwork/proof-server:4.0.0"
-+ image: 'ghcr.io/midnight-ntwrk/proof-server:7.0.0'
++ image: 'midnightntwrk/proof-server:7.0.0'
 
 - image: 'midnightntwrk/indexer-standalone:2.1.1'
-+ image: 'ghcr.io/midnight-ntwrk/indexer-standalone:3.0.0'
++ image: 'midnightntwrk/indexer-standalone:3.0.0'
 
 - image: 'midnightnetwork/midnight-node:0.12.0'
-+ image: 'ghcr.io/midnight-ntwrk/midnight-node:0.20.0'
++ image: 'midnightntwrk/midnight-node:0.20.0'
 ```
 
-Note: The registry changed from `midnightnetwork/` and `midnightntwrk/` to `ghcr.io/midnight-ntwrk/`.
+Note: The registry consolidated from `midnightnetwork/` to `midnightntwrk/` on Docker Hub.
 
 For **Preprod/Preview** deployments where you only need a local proof server (indexer and node are remote):
 
