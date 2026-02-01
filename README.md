@@ -2,7 +2,7 @@
 
 [![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.28.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
-A Midnight smart contract example demonstrating a privacy-preserving counter. The counter value is incremented via zero-knowledge proof transactions on-chain.
+A Midnight smart contract example demonstrating a simple on-chain counter. The counter uses public ledger state and serves as a starting point for building Midnight DApps.
 
 Supports three network targets:
 
