@@ -15,7 +15,6 @@
 
 import {
   type CircuitContext,
-  QueryContext,
   sampleContractAddress,
   createConstructorContext,
   createCircuitContext
