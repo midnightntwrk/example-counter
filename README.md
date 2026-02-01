@@ -52,13 +52,16 @@ compactc --version   # expect: 0.28.0
 npm install
 ```
 
-### 2. Compile the smart contract
+### 2. Build the smart contract
 
 ```bash
-cd contract && npm run compact
+cd contract
+npm run compact
+npm run build
+npm run test
 ```
 
-Expected output:
+Expected output from `npm run compact`:
 
 ```
 Compiling 1 circuits:
@@ -67,47 +70,37 @@ Compiling 1 circuits:
 
 The first run may download zero-knowledge parameters (~500MB). This is a one-time download.
 
-### 3. Build the project
+### 3. Run the DApp
 
-```bash
-npm run build && npm run test
-```
-
-### 4. Build the CLI
-
-```bash
-cd ../counter-cli && npm run build
-```
-
-### 5. Start the proof server
-
-The proof server generates zero-knowledge proofs locally to protect private data. It must be running before you can deploy or interact with contracts.
-
-In a separate terminal:
+Option A — **auto-start proof server** (recommended):
 
 ```bash
 cd counter-cli
-docker compose -f proof-server-preprod.yml up
+npm run preprod-ps
 ```
 
-Wait for it to download ZK key material and start. You should see:
+This pulls the proof server Docker image, starts it, and launches the CLI.
+
+Option B — **manual proof server** (if you prefer to manage it yourself):
+
+Start the proof server in a separate terminal:
+
+```bash
+cd counter-cli
+docker compose -f proof-server.yml up
+```
+
+Wait for it to start — you should see:
 
 ```
 INFO actix_server::server: starting service: "actix-web-service-0.0.0.0:6300", workers: 24, listening on: 0.0.0.0:6300
 ```
 
-**Keep this terminal running.** You can verify the proof server is ready:
+Then in another terminal:
 
 ```bash
-curl http://localhost:6300/version
-```
-
-### 6. Run the DApp
-
-In a new terminal:
-
-```bash
-cd counter-cli && npm run preprod
+cd counter-cli
+npm run preprod
 ```
 
 ## Using the Counter DApp
@@ -214,12 +207,12 @@ This is useful for:
 | Issue | Solution |
 |-------|----------|
 | `compactc: command not found` | Run `source $HOME/.local/bin/env` then `compactc --version`. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for details. |
-| `connect ECONNREFUSED 127.0.0.1:6300` | Start the proof server: `docker compose -f proof-server-preprod.yml up` |
+| `connect ECONNREFUSED 127.0.0.1:6300` | Start the proof server: `cd counter-cli && docker compose -f proof-server.yml up` |
 | `Failed to clone intent` during deploy | Wallet SDK signing bug — already worked around in this codebase. If you see this, ensure you're running the latest code. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) Section 4. |
 | DUST balance drops to 0 after failed deploy | Known wallet SDK issue. Restart the DApp to release locked DUST coins. |
 | Wallet shows 0 balance after faucet | Wait for sync to complete. If still 0, check that you sent to the correct unshielded address. |
-| Could not find a working container runtime strategy | Docker isn't running. Start Docker Desktop and try again. |
-| Tests fail with "Cannot find module" | Compile contract first: `cd contract && npm run compact && npm run build && npm run test` |
+| Could not find a working container runtime strategy | Docker isn't running. Start Docker and try again. |
+| Tests fail with "Cannot find module" | Build the contract first: `cd contract && npm run compact && npm run build` |
 | Node.js warnings about experimental features | Normal — these don't affect functionality. |
 
 ## Useful Links
