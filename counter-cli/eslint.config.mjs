@@ -34,6 +34,9 @@ export default [
         Buffer: 'readonly',
         URL: 'readonly',
         setTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        console: 'readonly',
       },
     },
     plugins: {
@@ -41,6 +44,8 @@ export default [
       prettier: pluginPrettier,
     },
     rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'prettier/prettier': 'error',
       '@typescript-eslint/no-misused-promises': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',

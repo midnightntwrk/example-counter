@@ -171,7 +171,10 @@ const deployOrJoin = async (
             let cause: unknown = e.cause;
             let depth = 0;
             while (cause && depth < 5) {
-              const causeMsg = cause instanceof Error ? `${cause.message}\n      ${cause.stack?.split('\n').slice(1, 3).join('\n      ') ?? ''}` : String(cause);
+              const causeMsg =
+                cause instanceof Error
+                  ? `${cause.message}\n      ${cause.stack?.split('\n').slice(1, 3).join('\n      ') ?? ''}`
+                  : String(cause);
               console.log(`    cause: ${causeMsg}`);
               cause = cause instanceof Error ? cause.cause : undefined;
               depth++;
@@ -206,11 +209,7 @@ const deployOrJoin = async (
  * Main interaction loop. Once a contract is deployed/joined, the user
  * can increment the counter or query its current value.
  */
-const mainLoop = async (
-  providers: CounterProviders,
-  walletCtx: api.WalletContext,
-  rli: Interface,
-): Promise<void> => {
+const mainLoop = async (providers: CounterProviders, walletCtx: api.WalletContext, rli: Interface): Promise<void> => {
   const counterContract = await deployOrJoin(providers, walletCtx, rli);
   if (counterContract === null) {
     return;
@@ -293,9 +292,7 @@ export const run = async (config: Config, _logger: Logger, dockerEnv?: DockerCom
 
     try {
       // Step 3: Configure midnight-js providers
-      const providers = await api.withStatus('Configuring providers', () =>
-        api.configureProviders(walletCtx, config),
-      );
+      const providers = await api.withStatus('Configuring providers', () => api.configureProviders(walletCtx, config));
       console.log('');
 
       // Step 4: Enter the contract interaction loop

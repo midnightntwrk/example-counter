@@ -187,10 +187,7 @@ export class TestEnvironment {
 
   getWallet = async () => {
     this.logger.info('Setting up wallet');
-    this.walletCtx = await api.buildWalletAndWaitForFunds(
-      this.testConfig.dappConfig,
-      this.testConfig.seed,
-    );
+    this.walletCtx = await api.buildWalletAndWaitForFunds(this.testConfig.dappConfig, this.testConfig.seed);
     expect(this.walletCtx).not.toBeNull();
     const state = await Rx.firstValueFrom(this.walletCtx.wallet.state());
     expect(state.unshielded.balances[unshieldedToken().raw] ?? 0n).toBeGreaterThan(0n);

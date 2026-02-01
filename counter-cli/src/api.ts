@@ -23,11 +23,7 @@ import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-j
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
-import {
-  type FinalizedTxData,
-  type MidnightProvider,
-  type WalletProvider,
-} from '@midnight-ntwrk/midnight-js-types';
+import { type FinalizedTxData, type MidnightProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import { DustWallet } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { HDWallet, Roles, generateRandomSeed } from '@midnight-ntwrk/wallet-sdk-hd';
@@ -152,7 +148,6 @@ export const displayCounterValue = async (
  * (UnboundTransaction) intents that contain 'proof' data.
  */
 const signTransactionIntents = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tx: { intents?: Map<number, any> },
   signFn: (payload: Uint8Array) => ledger.Signature,
   proofMarker: 'proof' | 'pre-proof',
@@ -402,11 +397,7 @@ const registerForDustGeneration = async (
  * Prints a formatted wallet summary to the console, showing all three
  * wallet types (Shielded, Unshielded, Dust) with their addresses and balances.
  */
-const printWalletSummary = (
-  seed: string,
-  state: any,
-  unshieldedKeystore: UnshieldedKeystore,
-) => {
+const printWalletSummary = (seed: string, state: any, unshieldedKeystore: UnshieldedKeystore) => {
   const networkId = getNetworkId();
   const unshieldedBalance = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
 
@@ -448,10 +439,7 @@ ${DIV}`);
  *   4. Display a wallet summary with all addresses
  *   5. If balance is zero, wait for incoming funds (e.g. from faucet)
  */
-export const buildWalletAndWaitForFunds = async (
-  config: Config,
-  seed: string,
-): Promise<WalletContext> => {
+export const buildWalletAndWaitForFunds = async (config: Config, seed: string): Promise<WalletContext> => {
   console.log('');
 
   // Derive HD keys and initialize the three sub-wallets
@@ -541,7 +529,9 @@ export const configureProviders = async (ctx: WalletContext, config: Config) => 
 /**
  * Get the current DUST balance from the wallet state.
  */
-export const getDustBalance = async (wallet: WalletFacade): Promise<{ available: bigint; pending: bigint; availableCoins: number; pendingCoins: number }> => {
+export const getDustBalance = async (
+  wallet: WalletFacade,
+): Promise<{ available: bigint; pending: bigint; availableCoins: number; pendingCoins: number }> => {
   const state = await Rx.firstValueFrom(wallet.state().pipe(Rx.filter((s) => s.isSynced)));
   const available = state.dust.walletBalance(new Date());
   const availableCoins = state.dust.availableCoins.length;
@@ -556,45 +546,49 @@ export const getDustBalance = async (wallet: WalletFacade): Promise<{ available:
  * Prints a status line every 5 seconds showing balance, coins, and status.
  * Resolves when the user presses Enter (via the provided signal).
  */
-export const monitorDustBalance = async (
-  wallet: WalletFacade,
-  stopSignal: Promise<void>,
-): Promise<void> => {
+export const monitorDustBalance = async (wallet: WalletFacade, stopSignal: Promise<void>): Promise<void> => {
   let stopped = false;
-  stopSignal.then(() => { stopped = true; });
-
-  const sub = wallet.state().pipe(
-    Rx.throttleTime(5_000),
-    Rx.filter((s) => s.isSynced),
-  ).subscribe((state) => {
-    if (stopped) return;
-
-    const now = new Date();
-    const available = state.dust.walletBalance(now);
-    const availableCoins = state.dust.availableCoins.length;
-    const pendingCoins = state.dust.pendingCoins.length;
-
-    const registeredNight = state.unshielded.availableCoins.filter(
-      (coin: any) => coin.meta?.registeredForDustGeneration === true,
-    ).length;
-    const totalNight = state.unshielded.availableCoins.length;
-
-    let status = '';
-    if (pendingCoins > 0 && availableCoins === 0) {
-      status = '⚠ locked by pending tx';
-    } else if (available > 0n) {
-      status = '✓ ready to deploy';
-    } else if (availableCoins > 0) {
-      status = 'accruing...';
-    } else if (registeredNight > 0) {
-      status = 'waiting for generation...';
-    } else {
-      status = 'no NIGHT registered';
-    }
-
-    const time = now.toLocaleTimeString();
-    console.log(`  [${time}] DUST: ${formatBalance(available)} (${availableCoins} coins, ${pendingCoins} pending) | NIGHT: ${totalNight} UTXOs, ${registeredNight} registered | ${status}`);
+  void stopSignal.then(() => {
+    stopped = true;
   });
+
+  const sub = wallet
+    .state()
+    .pipe(
+      Rx.throttleTime(5_000),
+      Rx.filter((s) => s.isSynced),
+    )
+    .subscribe((state) => {
+      if (stopped) return;
+
+      const now = new Date();
+      const available = state.dust.walletBalance(now);
+      const availableCoins = state.dust.availableCoins.length;
+      const pendingCoins = state.dust.pendingCoins.length;
+
+      const registeredNight = state.unshielded.availableCoins.filter(
+        (coin: any) => coin.meta?.registeredForDustGeneration === true,
+      ).length;
+      const totalNight = state.unshielded.availableCoins.length;
+
+      let status = '';
+      if (pendingCoins > 0 && availableCoins === 0) {
+        status = '⚠ locked by pending tx';
+      } else if (available > 0n) {
+        status = '✓ ready to deploy';
+      } else if (availableCoins > 0) {
+        status = 'accruing...';
+      } else if (registeredNight > 0) {
+        status = 'waiting for generation...';
+      } else {
+        status = 'no NIGHT registered';
+      }
+
+      const time = now.toLocaleTimeString();
+      console.log(
+        `  [${time}] DUST: ${formatBalance(available)} (${availableCoins} coins, ${pendingCoins} pending) | NIGHT: ${totalNight} UTXOs, ${registeredNight} registered | ${status}`,
+      );
+    });
 
   await stopSignal;
   sub.unsubscribe();
