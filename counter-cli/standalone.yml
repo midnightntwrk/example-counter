@@ -17,7 +17,7 @@ services:
   indexer:
     container_name: 'counter-indexer'
     image: 'midnightntwrk/indexer-standalone:3.0.0'
-    env_file: standalone.env
+    env_file: standalone.env.example
     ports:
       - '0:8088'
     environment:
