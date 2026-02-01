@@ -2,19 +2,28 @@
 
 [![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.28.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
-A Midnight smart contract example demonstrating a privacy-preserving counter on the Preprod network. The counter value is incremented via zero-knowledge proof transactions on-chain.
+A Midnight smart contract example demonstrating a privacy-preserving counter. The counter value is incremented via zero-knowledge proof transactions on-chain.
 
-> **Note**: This example currently targets the **Preprod** network. Standalone (local) and Preview network support will be added in a future update.
+Supports three network targets:
+
+| Network | Description | Command |
+|---------|-------------|---------|
+| **Preprod** | Public testnet (recommended for getting started) | `npm run preprod-ps` |
+| **Preview** | Public preview testnet | `npm run preview-ps` |
+| **Standalone** | Fully local (node + indexer + proof server via Docker) | `npm run standalone` |
 
 ## Project Structure
 
 ```
 example-counter/
-├── contract/               # Smart contract in Compact language
-│   ├── src/counter.compact # The counter smart contract
-│   └── src/test/           # Contract unit tests
-└── counter-cli/            # Command-line interface
-    └── src/                # CLI implementation
+├── contract/                          # Smart contract (Compact language)
+│   ├── src/counter.compact            # The counter smart contract
+│   └── src/test/                      # Contract unit tests
+└── counter-cli/                       # Command-line interface
+    ├── src/                           # CLI implementation
+    ├── proof-server.yml               # Proof server Docker config (preprod/preview)
+    ├── standalone.yml                 # Full local stack Docker config
+    └── standalone.env.example         # Default env vars for standalone mode
 ```
 
 ## Prerequisites
