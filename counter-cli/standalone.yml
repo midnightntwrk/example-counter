@@ -25,10 +25,6 @@ services:
       # nosemgrep: javascript.lang.security.detect-insecure-websocket.detect-insecure-websocket
       APP__INFRA__NODE__URL: 'ws://node:9944'
       APP__APPLICATION__NETWORK_ID: 'undeployed'
-      APP__INFRA__STORAGE__PASSWORD: ${INDEXER_STORAGE_PASSWORD}
-      APP__INFRA__PUB_SUB__PASSWORD: ${INDEXER_PUB_SUB_PASSWORD}
-      APP__INFRA__LEDGER_STATE_STORAGE__PASSWORD: ${INDEXER_LEDGER_PASSWORD}
-      APP__INFRA__SECRET: ${INDEXER_SECRET}
     healthcheck:
       test: ['CMD-SHELL', 'cat /var/run/indexer-standalone/running']
       interval: 10s
