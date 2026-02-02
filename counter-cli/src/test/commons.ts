@@ -161,7 +161,6 @@ export class TestEnvironment {
   static getProofServerContainer = async (env: string) =>
     await new GenericContainer('midnightnetwork/proof-server:latest')
       .withExposedPorts(6300)
-      .withCommand([`midnight-proof-server --network ${env}`])
       .withEnvironment({ RUST_BACKTRACE: 'full' })
       .withWaitStrategy(Wait.forLogMessage('Actix runtime found; starting in Actix runtime', 1))
       .start();

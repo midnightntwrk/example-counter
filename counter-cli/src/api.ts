@@ -392,7 +392,7 @@ export const initWalletWithSeed = async (
   const dustParams = ledger.LedgerParameters.initialParameters().dust;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const walletConfiguration: any = {
+  const walletConfiguration = {
     networkId: config.networkId,
     costParameters: {
       ledgerParams: ledger.LedgerParameters.initialParameters(),

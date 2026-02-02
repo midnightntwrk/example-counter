@@ -235,7 +235,6 @@ Next time you run the DApp:
 | Issue                                               | Solution                                                                                                                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `compact: command not found`                        | Run `source $HOME/.local/bin/env` then `compact compile --version`                                                      |
-| `connect ECONNREFUSED 127.0.0.1:6300`               | Start proof server: `docker run -p 6300:6300 midnightnetwork/proof-server -- 'midnight-proof-server --network testnet'` |
 | Could not find a working container runtime strategy | Docker isn't running properly. Restart Docker Desktop and try again                                                     |
 | Tests fail with "Cannot find module"                | Compile contract first: `cd contract && npm run compact && npm run build && npm run test`                               |
 | Wallet seed validation errors                       | Enter complete 64-character hex string without extra spaces                                                             |
