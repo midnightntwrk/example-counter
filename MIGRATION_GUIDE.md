@@ -211,6 +211,7 @@ Replace `randomBytes`-based seed generation with HD wallet key derivation:
 
 ```typescript
 import { HDWallet, Roles, generateRandomSeed } from '@midnight-ntwrk/wallet-sdk-hd';
+import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 import { Buffer } from 'buffer';
 
 const seed = toHex(Buffer.from(generateRandomSeed()));
@@ -229,7 +230,10 @@ const keys = derivationResult.keys;
 
 ### Wallet Initialization
 
+Using the `keys` derived above, initialize the three sub-wallets and the facade:
+
 ```typescript
+import { Roles } from '@midnight-ntwrk/wallet-sdk-hd';
 import * as ledger from '@midnight-ntwrk/ledger-v7';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import { ShieldedWallet } from '@midnight-ntwrk/wallet-sdk-shielded';
@@ -239,6 +243,7 @@ import {
   PublicKey, UnshieldedWallet,
 } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
 
+// `keys` comes from derivationResult.keys in the Key Derivation step above
 const shieldedSecretKeys = ledger.ZswapSecretKeys.fromSeed(keys[Roles.Zswap]);
 const dustSecretKey = ledger.DustSecretKey.fromSeed(keys[Roles.Dust]);
 const unshieldedKeystore = createKeystore(keys[Roles.NightExternal], getNetworkId());
