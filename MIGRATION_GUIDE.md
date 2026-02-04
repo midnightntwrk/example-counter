@@ -8,24 +8,18 @@ Guide for deploying or upgrading Midnight contracts/dApps to the Preprod network
 
 ### Required Version
 
-- **Compact compiler (`compactc`)**: `0.28.0`
 - **Compact version manager (`compact`)**: `0.4.0`
+- **Compiler version**: `0.28.0` (installed and invoked via the version manager)
+
+> **Important**: You do not invoke `compactc` directly. The `compact` version manager finds and runs the correct compiler version. All compilation uses `compact compile` (or `npm run compact` in this project).
 
 ### Clean Install (recommended)
 
 Remove any existing Compact installations first:
 
 ```bash
-# Remove user installations
 rm -rf ~/.compact
-rm -f ~/.local/bin/compactc ~/.local/bin/compactc.bin ~/.local/bin/compact
-
-# Remove system-wide installations (if any)
-sudo rm -f /usr/local/bin/compactc /usr/local/bin/compactc.bin
-sudo rm -rf /usr/local/lib/compactc
-
-# Remove old PATH entries from ~/.bashrc (or ~/.zshrc)
-# Delete any lines like: export PATH="$HOME/.compact/bin:$PATH"
+rm -f ~/.local/bin/compact
 ```
 
 ### Install
@@ -37,66 +31,31 @@ curl --proto '=https' --tlsv1.2 -LsSf \
   https://github.com/midnightntwrk/compact/releases/download/compact-v0.4.0/compact-installer.sh | sh
 ```
 
-2. Copy the `compact` binary to the standard location:
+2. Add to PATH:
 
 ```bash
-mkdir -p ~/.compact/bin
-cp ~/.local/bin/compact ~/.compact/bin/compact
-chmod +x ~/.compact/bin/compact
+source $HOME/.local/bin/env
 ```
 
-3. Install the compiler:
+3. Install the compiler version:
 
 ```bash
-~/.compact/bin/compact update 0.28.0
+compact update 0.28.0
 ```
-
-4. **Fix missing symlinks** — `compact update` does not create symlinks for `compactc.bin` and `zkir`. Add them manually:
-
-```bash
-cd ~/.compact/bin
-ln -sf ~/.compact/versions/0.28.0/x86_64-unknown-linux-musl/compactc.bin compactc.bin
-ln -sf ~/.compact/versions/0.28.0/x86_64-unknown-linux-musl/zkir zkir
-```
-
-> **Note**: On macOS use `aarch64-darwin` or `x86_64-darwin` instead of `x86_64-unknown-linux-musl`.
-
-5. Add to PATH in `~/.bashrc` (or `~/.zshrc`):
-
-```bash
-# Compact compiler (Midnight)
-export PATH="$HOME/.compact/bin:$PATH"
-```
-
-Then reload: `source ~/.bashrc`
 
 ### Verify
 
 ```bash
-compactc --version   # expect: 0.28.0
 compact --version    # expect: compact 0.4.0
-```
-
-### Available Versions Reference
-
-Use `compact list` to see all available compiler versions:
-
-```
-0.28.0 - x86_macos, aarch64_macos, x86_linux
-0.26.0 - x86_macos, aarch64_macos, x86_linux
-0.25.0 - x86_macos, aarch64_macos, x86_linux
-0.24.0 - x86_macos, aarch64_macos, x86_linux
-0.23.0 - aarch64_macos, x86_linux
-0.22.0 - x86_macos, x86_linux
+compact list         # should show → 0.28.0 as the selected version
 ```
 
 ### Known Issues
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| `compactc.bin: No such file or directory` | `compact update` doesn't symlink `compactc.bin` into `~/.compact/bin/` | Manually create the symlink (see step 4 above) |
-| Installer puts binary in snap-specific path | Running installer from VS Code terminal | Copy binary to `~/.compact/bin/` (see step 2 above) |
-| Old version still resolving | Stale symlinks in `/usr/local/bin` or `~/.local/bin` | Remove old installations before installing (see Clean Install) |
+| `compact: command not found` | PATH not updated after install | Run `source $HOME/.local/bin/env` |
+| Old version still resolving | Stale installations in `/usr/local/bin` or `~/.compact` | Remove old installations before installing (see Clean Install) |
 
 ---
 
@@ -554,15 +513,15 @@ Note: The registry consolidated from `midnightnetwork/` to `midnightntwrk/` on D
 For **Preprod/Preview** deployments where you only need a local proof server (indexer and node are remote):
 
 ```yaml
-# proof-server-preprod.yml
+# proof-server.yml
 services:
   proof-server:
-    image: "midnightnetwork/proof-server:latest"
-    command: ["midnight-proof-server -v"]
+    image: 'midnightntwrk/proof-server:7.0.0'
+    command: ['midnight-proof-server -v']
     ports:
-      - "6300:6300"
+      - '6300:6300'
     environment:
-      RUST_BACKTRACE: "full"
+      RUST_BACKTRACE: 'full'
 ```
 
 ### Proof Server — CLI Flag Changes
@@ -666,7 +625,7 @@ Network configs were updated to use the new GraphQL v3 paths and target the Prev
 
 Quick reference for deploying a DApp to Preprod:
 
-1. **Proof server**: Run locally via Docker (`docker compose -f proof-server-preprod.yml up`)
+1. **Proof server**: Run locally via Docker (`docker compose -f proof-server.yml up`)
 2. **Wallet**: Create or restore from seed — the app connects to remote Preprod indexer and RPC
 3. **Fund wallet**: Send tNight to the **unshielded** address via [https://faucet.preprod.midnight.network](https://faucet.preprod.midnight.network)
 4. **Wait for DUST**: After funding, NIGHT UTXOs are registered for dust generation automatically. Wait for DUST to accrue before deploying.

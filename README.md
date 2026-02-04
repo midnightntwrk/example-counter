@@ -33,7 +33,7 @@ example-counter/
 
 ### Compact Compiler (v0.28.0)
 
-The Compact compiler converts smart contracts into circuits for zero-knowledge proof generation.
+The Compact compiler converts smart contracts into circuits. The `compact` version manager handles installing and invoking the compiler — you never need to call `compactc` directly.
 
 Install the version manager and compiler:
 
@@ -48,10 +48,11 @@ source $HOME/.local/bin/env
 compact update 0.28.0
 
 # Verify
-compactc --version   # expect: 0.28.0
+compact --version    # expect: compact 0.4.0
+compact list         # should show → 0.28.0 as the selected version
 ```
 
-> If `compactc` is not found after installation, see [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed troubleshooting (symlink fixes, PATH setup, clean install).
+> **Important**: You do not invoke `compactc` directly. The `compact` version manager finds and runs the correct compiler version for you. All compilation in this project uses `compact compile` via `npm run compact`.
 
 ## Quick Start (Preprod)
 
@@ -168,7 +169,7 @@ Once DUST is available, the contract menu appears with your balance:
 ### Step 4: Deploy a counter contract
 
 1. Choose option **[1]** to deploy
-2. Wait for proving, balancing, and submission (this involves a zero-knowledge proof round-trip)
+2. Wait for proving, balancing, and submission
 3. The contract address is displayed on success:
 
 ```
@@ -182,7 +183,7 @@ Once DUST is available, the contract menu appears with your balance:
 
 After deployment, the counter menu appears:
 
-- **[1] Increment counter** — submits a ZK proof transaction to increment the on-chain counter
+- **[1] Increment counter** — submits a transaction to increment the on-chain counter
 - **[2] Display current counter value** — queries the blockchain for the current value
 - **[3] Exit**
 
@@ -215,7 +216,7 @@ This is useful for:
 
 | Issue | Solution |
 |-------|----------|
-| `compactc: command not found` | Run `source $HOME/.local/bin/env` then `compactc --version`. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for details. |
+| `compact: command not found` | Run `source $HOME/.local/bin/env` to add it to your PATH. You do not need `compactc` — the `compact` version manager invokes the compiler. |
 | `connect ECONNREFUSED 127.0.0.1:6300` | Start the proof server: `cd counter-cli && docker compose -f proof-server.yml up` |
 | `Failed to clone intent` during deploy | Wallet SDK signing bug — already worked around in this codebase. If you see this, ensure you're running the latest code. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) Section 4. |
 | DUST balance drops to 0 after failed deploy | Known wallet SDK issue. Restart the DApp to release locked DUST coins. |
