@@ -91,6 +91,8 @@ npm run preprod-ps
 
 This pulls the proof server Docker image, starts it, and launches the CLI.
 
+> **Mac ARM (Apple Silicon) users**: If the proof server hangs, enable Docker VMM in Docker Desktop: Settings → General → "Virtual Machine Options" → select **Docker VMM**. Restart Docker after changing.
+
 Option B — **manual proof server** (if you prefer to manage it yourself):
 
 Start the proof server in a separate terminal:
@@ -218,6 +220,7 @@ This is useful for:
 |-------|----------|
 | `compact: command not found` | Run `source $HOME/.local/bin/env` to add it to your PATH. You do not need `compactc` — the `compact` version manager invokes the compiler. |
 | `connect ECONNREFUSED 127.0.0.1:6300` | Start the proof server: `cd counter-cli && docker compose -f proof-server.yml up` |
+| Proof server hangs on Mac ARM (Apple Silicon) | In Docker Desktop: Settings → General → "Virtual Machine Options" → select **Docker VMM**. Restart Docker after changing. |
 | `Failed to clone intent` during deploy | Wallet SDK signing bug — already worked around in this codebase. If you see this, ensure you're running the latest code. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) Section 4. |
 | DUST balance drops to 0 after failed deploy | Known wallet SDK issue. Restart the DApp to release locked DUST coins. |
 | Wallet shows 0 balance after faucet | Wait for sync to complete. If still 0, check that you sent to the correct unshielded address. |
