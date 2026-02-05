@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Config, StandaloneConfig, currentDir, TestnetRemoteConfig } from '../config';
+import { type Config, StandaloneConfig, currentDir, PreviewConfig, PreprodConfig } from '../config';
 import {
   DockerComposeEnvironment,
   GenericContainer,
@@ -24,10 +24,9 @@ import {
 import path from 'path';
 import * as api from '../api';
 import * as Rx from 'rxjs';
-import { nativeToken } from '@midnight-ntwrk/ledger';
+import { unshieldedToken } from '@midnight-ntwrk/ledger-v7';
 import type { Logger } from 'pino';
-import type { Wallet } from '@midnight-ntwrk/wallet-api';
-import type { Resource } from '@midnight-ntwrk/wallet';
+import type { WalletContext } from '../api';
 import { expect } from 'vitest';
 
 const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
@@ -67,7 +66,7 @@ export function parseArgs(required: string[]): TestConfiguration {
     }
   }
 
-  let cfg: Config = new TestnetRemoteConfig();
+  let cfg: Config = new PreviewConfig();
   let env = '';
   let psMode = 'undeployed';
   let cacheFileName = '';
@@ -78,9 +77,14 @@ export function parseArgs(required: string[]): TestConfiguration {
       throw new Error('TEST_ENV environment variable is not defined.');
     }
     switch (env) {
-      case 'testnet':
-        cfg = new TestnetRemoteConfig();
-        psMode = 'testnet';
+      case 'preview':
+        cfg = new PreviewConfig();
+        psMode = 'preview';
+        cacheFileName = `${seed.substring(0, 7)}-${psMode}.state`;
+        break;
+      case 'preprod':
+        cfg = new PreprodConfig();
+        psMode = 'preprod';
         cacheFileName = `${seed.substring(0, 7)}-${psMode}.state`;
         break;
       default:
@@ -102,7 +106,7 @@ export class TestEnvironment {
   private env: StartedDockerComposeEnvironment | undefined;
   private dockerEnv: DockerComposeEnvironment | undefined;
   private container: StartedTestContainer | undefined;
-  private wallet: (Wallet & Resource) | undefined;
+  private walletCtx: WalletContext | undefined;
   private testConfig: TestConfiguration;
 
   constructor(logger: Logger) {
@@ -159,17 +163,17 @@ export class TestEnvironment {
     return mappedUrl.toString().replace(/\/+$/, '');
   };
 
-  static getProofServerContainer = async (env: string) =>
-    await new GenericContainer('midnightnetwork/proof-server:4.0.0')
+  static getProofServerContainer = async (_env: string) =>
+    await new GenericContainer('midnightnetwork/proof-server:latest')
       .withExposedPorts(6300)
-      .withCommand([`midnight-proof-server --network ${env}`])
+      .withCommand(['midnight-proof-server -v'])
       .withEnvironment({ RUST_BACKTRACE: 'full' })
       .withWaitStrategy(Wait.forLogMessage('Actix runtime found; starting in Actix runtime', 1))
       .start();
 
   shutdown = async () => {
-    if (this.wallet !== undefined) {
-      await this.wallet.close();
+    if (this.walletCtx !== undefined) {
+      await this.walletCtx.wallet.stop();
     }
     if (this.env !== undefined) {
       this.logger.info('Test containers closing');
@@ -183,20 +187,10 @@ export class TestEnvironment {
 
   getWallet = async () => {
     this.logger.info('Setting up wallet');
-    this.wallet = await api.buildWalletAndWaitForFunds(
-      this.testConfig.dappConfig,
-      this.testConfig.seed,
-      this.testConfig.cacheFileName,
-    );
-    expect(this.wallet).not.toBeNull();
-    const state = await Rx.firstValueFrom(this.wallet.state());
-    expect(state.balances[nativeToken()].valueOf()).toBeGreaterThan(BigInt(0));
-    return this.wallet;
-  };
-
-  saveWalletCache = async () => {
-    if (this.wallet !== undefined) {
-      await api.saveState(this.wallet, this.testConfig.cacheFileName);
-    }
+    this.walletCtx = await api.buildWalletAndWaitForFunds(this.testConfig.dappConfig, this.testConfig.seed);
+    expect(this.walletCtx).not.toBeNull();
+    const state = await Rx.firstValueFrom(this.walletCtx.wallet.state());
+    expect(state.unshielded.balances[unshieldedToken().raw] ?? 0n).toBeGreaterThan(0n);
+    return this.walletCtx;
   };
 }
