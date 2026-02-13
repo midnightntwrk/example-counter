@@ -1,6 +1,6 @@
 # Counter DApp
 
-[![Generic badge](https://img.shields.io/badge/Compact%20Compiler-0.28.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/Compact%20Toolchain-0.28.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
 A Midnight smart contract example demonstrating a simple on-chain counter. The counter uses public ledger state and serves as a starting point for building Midnight DApps.
 
@@ -31,28 +31,27 @@ example-counter/
 - [Node.js v22.15+](https://nodejs.org/) — `node --version` to check
 - [Docker](https://docs.docker.com/get-docker/) with `docker compose` — used for the local proof server
 
-### Compact Compiler (v0.28.0)
+### Compact Developer Tools (devtools)
 
-The Compact compiler converts smart contracts into circuits. The `compact` version manager handles installing and invoking the compiler — you never need to call `compactc` directly.
+The Compact devtools manage and invoke the Compact toolchain (compiler, formatter, fixup tool, etc.).
 
-Install the version manager and compiler:
+Install the devtools and toolchain:
 
 ```bash
-# Install the Compact version manager
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/download/compact-v0.4.0/compact-installer.sh | sh
+# Install the Compact devtools
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
 
 # Add to PATH
 source $HOME/.local/bin/env
 
-# Install the compiler version required by this project
+# Install the toolchain version used by this project
 compact update 0.28.0
 
 # Verify
-compact --version    # expect: compact 0.4.0
-compact list         # should show → 0.28.0 as the selected version
+compact compile --version
 ```
 
-> **Important**: You do not invoke `compactc` directly. The `compact` version manager finds and runs the correct compiler version for you. All compilation in this project uses `compact compile` via `npm run compact`.
+> If you already have the devtools installed, run `compact self update` to get the latest version. If you encounter issues, `compact clean` will reset your `.compact` directory.
 
 ## Quick Start (Preprod)
 
@@ -218,7 +217,7 @@ This is useful for:
 
 | Issue | Solution |
 |-------|----------|
-| `compact: command not found` | Run `source $HOME/.local/bin/env` to add it to your PATH. You do not need `compactc` — the `compact` version manager invokes the compiler. |
+| `compact: command not found` | Run `source $HOME/.local/bin/env` to add it to your PATH. |
 | `connect ECONNREFUSED 127.0.0.1:6300` | Start the proof server: `cd counter-cli && docker compose -f proof-server.yml up` |
 | Proof server hangs on Mac ARM (Apple Silicon) | In Docker Desktop: Settings → General → "Virtual Machine Options" → select **Docker VMM**. Restart Docker after changing. |
 | `Failed to clone intent` during deploy | Wallet SDK signing bug — already worked around in this codebase. If you see this, ensure you're running the latest code. See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) Section 4. |
