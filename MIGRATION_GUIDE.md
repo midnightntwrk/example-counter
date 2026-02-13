@@ -4,31 +4,22 @@ Guide for deploying or upgrading Midnight contracts/dApps to the Preprod network
 
 ---
 
-## 1. Compact Compiler
+## 1. Compact Developer Tools (devtools)
 
-### Required Version
+### Recommended Version
 
-- **Compact version manager (`compact`)**: `0.4.0`
-- **Compiler version**: `0.28.0` (installed and invoked via the version manager)
+- **Compact devtools (`compact`)**: latest (currently `0.4.0`)
+- **Compact toolchain**: `0.28.0` (installed and invoked via the devtools)
 
-> **Important**: You do not invoke `compactc` directly. The `compact` version manager finds and runs the correct compiler version. All compilation uses `compact compile` (or `npm run compact` in this project).
-
-### Clean Install (recommended)
-
-Remove any existing Compact installations first:
-
-```bash
-rm -rf ~/.compact
-rm -f ~/.local/bin/compact
-```
+Users should be on the latest version of the devtools. There is no strict requirement for a specific version, but the latest ensures compatibility.
 
 ### Install
 
-1. Install the version manager:
+1. Install the devtools:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/midnightntwrk/compact/releases/download/compact-v0.4.0/compact-installer.sh | sh
+  https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
 ```
 
 2. Add to PATH:
@@ -37,17 +28,18 @@ curl --proto '=https' --tlsv1.2 -LsSf \
 source $HOME/.local/bin/env
 ```
 
-3. Install the compiler version:
+3. Install the toolchain:
 
 ```bash
 compact update 0.28.0
 ```
 
+> **Note**: If you already have the devtools installed, `compact self update` will update to the latest version. If you encounter issues with a corrupted `.compact` directory, `compact clean` will reset it.
+
 ### Verify
 
 ```bash
-compact --version    # expect: compact 0.4.0
-compact list         # should show → 0.28.0 as the selected version
+compact compile --version   # shows the installed toolchain version
 ```
 
 ### Known Issues
@@ -55,7 +47,7 @@ compact list         # should show → 0.28.0 as the selected version
 | Issue | Cause | Fix |
 |-------|-------|-----|
 | `compact: command not found` | PATH not updated after install | Run `source $HOME/.local/bin/env` |
-| Old version still resolving | Stale installations in `/usr/local/bin` or `~/.compact` | Remove old installations before installing (see Clean Install) |
+| Unexpected devtools behavior | Corrupted `.compact` directory | Run `compact clean` to reset |
 
 ---
 
@@ -63,7 +55,7 @@ compact list         # should show → 0.28.0 as the selected version
 
 ### What Changed
 
-Compact compiler `0.28.0` uses **language version `0.20.0`**. Contracts targeting older language versions (e.g. `>= 0.16 && <= 0.18`) will fail to compile.
+Compact toolchain `0.28.0` uses **language version `0.20.0`**. Contracts targeting older language versions (e.g. `>= 0.16 && <= 0.18`) will fail to compile.
 
 ### Required Change
 
@@ -71,8 +63,10 @@ Update the `pragma` in your `.compact` file(s):
 
 ```diff
 - pragma language_version >= 0.16 && <= 0.18;
-+ pragma language_version >= 0.20;
++ pragma language_version 0.20;
 ```
+
+> **Note**: Use an exact version (`0.20`) rather than an open-ended range (`>= 0.20`). An open-ended range implies your contract will work with all future language versions, which cannot be guaranteed.
 
 ### Compile
 
@@ -100,7 +94,7 @@ zkir/       — increment.zkir, increment.bzkir (ZK circuit IR)
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| `language version 0.20.0 mismatch` | Pragma range doesn't include `0.20.0` | Update pragma to `>= 0.20` |
+| `language version 0.20.0 mismatch` | Pragma range doesn't include `0.20.0` | Update pragma to `0.20` |
 
 ---
 
@@ -649,4 +643,4 @@ Quick reference for deploying a DApp to Preprod:
 
 ---
 
-*Migration guide covering: Compact compiler, Contract pragma, JS dependencies (midnight-js 3.0.0), Wallet SDK (wallet-sdk-facade), Docker infrastructure, Network configuration, and Preprod deployment.*
+*Migration guide covering: Compact devtools & toolchain, Contract pragma, JS dependencies (midnight-js 3.0.0), Wallet SDK (wallet-sdk-facade), Docker infrastructure, Network configuration, and Preprod deployment.*
