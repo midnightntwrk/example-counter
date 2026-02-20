@@ -12,6 +12,12 @@ Supports three network targets:
 | **Preview** | Public preview testnet | `npm run preview-ps` |
 | **Standalone** | Fully local (node + indexer + proof server via Docker) | `npm run standalone` |
 
+
+> **Use this repo as a template. Do not fork it.**
+>  
+> This repository is intended to be used via GitHub’s “Use this template” flow.  
+> Forking this repo is discouraged, as forks are not tracked as independent projects.
+
 ## Project Structure
 
 ```
