@@ -14,8 +14,8 @@
     "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@types/node": "^24.0.0",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.3.3",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
@@ -28,7 +28,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "@midnight-ntwrk/compact-js": "3.1.0",
+    "@midnight-ntwrk/compact-js": "2.4.2",
     "@midnight-ntwrk/compact-runtime": "0.14.0",
     "@midnight-ntwrk/ledger-v7": "7.0.2",
     "@midnight-ntwrk/midnight-js-contracts": "3.1.0",
@@ -51,6 +51,7 @@
     "ws": "^8.19.0"
   },
   "overrides": {
-    "smoldot": "npm:@aspect-build/empty@0.0.0"
+    "smoldot": "npm:@aspect-build/empty@0.0.0",
+    "@midnight-ntwrk/ledger-v7": "7.0.2"
   }
 }
