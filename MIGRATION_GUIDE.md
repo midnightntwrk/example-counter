@@ -45,7 +45,7 @@ compact compile --version   # shows the installed toolchain version
 ### Known Issues
 
 | Issue | Cause | Fix |
-|-------|-------|-----|
+| --- | --- | --- |
 | `compact: command not found` | PATH not updated after install | Run `source $HOME/.local/bin/env` |
 | Unexpected devtools behavior | Corrupted `.compact` directory | Run `compact clean` to reset |
 
@@ -76,7 +76,7 @@ compact compile src/counter.compact src/managed/counter
 
 Expected output:
 
-```
+```text
 Compiling 1 circuits:
 ```
 
@@ -84,23 +84,23 @@ Compiling 1 circuits:
 
 After a successful compile, `src/managed/counter/` will contain:
 
-```
+```text
 contract/   — index.js, index.d.ts (TypeScript bindings)
 keys/       — increment.prover, increment.verifier (ZK keys)
 zkir/       — increment.zkir, increment.bzkir (ZK circuit IR)
 ```
 
-### Known Issues
+### Known Issues — Contract Pragma
 
 | Issue | Cause | Fix |
-|-------|-------|-----|
+| --- | --- | --- |
 | `language version 0.20.0 mismatch` | Pragma range doesn't include `0.20.0` | Update pragma to `0.20` |
 
 ---
 
 ## 3. JS Dependencies — midnight-js 3.x
 
-### What Changed
+### What Changed — midnight-js 3.x
 
 The midnight-js framework packages were upgraded from `2.0.x` to `3.x` (currently `3.1.0`). This brings new types from `@midnight-ntwrk/ledger-v7` and a new `CompiledContract` pattern from `@midnight-ntwrk/compact-js`.
 
@@ -172,7 +172,7 @@ const ledgerState = sim.state('counter').data;
 
 ## 4. Wallet SDK — wallet-sdk-facade Migration
 
-### What Changed
+### What Changed — Wallet SDK
 
 The monolithic `@midnight-ntwrk/wallet` + `@midnight-ntwrk/wallet-api` packages are replaced by the new modular wallet SDK ecosystem. This eliminates the need for `@midnight-ntwrk/zswap` type bridging and most `as any` casts, since the new wallet uses `ledger-v7` types natively.
 
@@ -273,6 +273,7 @@ await wallet.start(shieldedSecretKeys, dustSecretKey);
 Each sub-wallet requires different config fields:
 
 **ShieldedWallet:**
+
 ```typescript
 {
   networkId: getNetworkId(),
@@ -283,6 +284,7 @@ Each sub-wallet requires different config fields:
 ```
 
 **UnshieldedWallet:**
+
 ```typescript
 {
   networkId: getNetworkId(),
@@ -292,6 +294,7 @@ Each sub-wallet requires different config fields:
 ```
 
 **DustWallet:**
+
 ```typescript
 {
   networkId: getNetworkId(),
@@ -311,6 +314,7 @@ The `WalletProvider` / `MidnightProvider` interface used by midnight-js is bridg
 In `@midnight-ntwrk/wallet-sdk-unshielded-wallet` v1.0.0, `TransactionOps.addSignature()` clones intents via `Intent.deserialize()` with a hardcoded `'pre-proof'` type marker. This works for `UnprovenTransaction` (which has `PreProof` intents), but fails for `UnboundTransaction` (which has `Proof` intents after `proveTx()`). The WASM deserializer cannot parse proof-format bytes using the pre-proof marker.
 
 The bug is in `TransactionOps.ts` line ~101:
+
 ```typescript
 // BUG: hardcoded 'pre-proof' fails for proven (UnboundTransaction) intents
 ledger.Intent.deserialize<ledger.SignatureEnabled, ledger.PreProof, ledger.PreBinding>(
@@ -438,6 +442,7 @@ If you use the wrong token type for balance lookups, the wallet will appear to h
 ```
 
 You must provide **exactly one** of:
+
 - `walletProvider` — uses the wallet's encryption public key (recommended when using wallet-sdk-facade)
 - `privateStoragePasswordProvider: () => string` — a function returning a custom password (min 16 chars)
 
@@ -468,8 +473,9 @@ const dustAddr = state.dust.address;
 **Important**: `UnshieldedKeystore` uses `getBech32Address()` (a method), not `.address` (a property).
 
 Address format reference:
+
 | Type | Prefix | Example |
-|------|--------|---------|
+| --- | --- | --- |
 | Shielded | `mn_shield-addr_<network>1...` | `mn_shield-addr_preprod1q...` |
 | Unshielded | `mn_addr_<network>1...` | `mn_addr_preprod1q...` |
 | Dust | `mn_dust_<network>1...` | `mn_dust_preprod1w...` |
@@ -479,6 +485,7 @@ Address format reference:
 On Preprod/Preview, NIGHT tokens generate DUST over time, but only after UTXOs are explicitly registered for dust generation via an on-chain transaction. This must happen before any contract deployment or interaction.
 
 The registration flow:
+
 1. Check if dust is already available from a previous session
 2. Filter for unregistered NIGHT coins
 3. Call `wallet.registerNightUtxosForDustGeneration()` with the coins and signing function
@@ -486,10 +493,10 @@ The registration flow:
 
 DUST balance accrues over time once registered. Initial DUST generation may take a minute or two.
 
-### Known Issues
+### Known Issues — Wallet SDK
 
 | Issue | Cause | Fix |
-|-------|-------|-----|
+| --- | --- | --- |
 | `Failed to clone intent` during deploy/call | `signRecipe` uses hardcoded `'pre-proof'` marker for all intents, but proven transactions have `'proof'` intents | Bypass `signRecipe` and sign manually with correct proof markers — see workaround above |
 | DUST balance drops to 0 after failed transaction | Pending coins not released on failure (wallet SDK 1.0.0 known issue) | Restart the wallet to recover pending DUST |
 | Wallet shows zero balance despite receiving funds | Using `nativeToken()` (68-char tagged) instead of `unshieldedToken().raw` (64-char raw) for balance lookup | Replace `nativeToken()` with `unshieldedToken().raw` from `@midnight-ntwrk/ledger-v7` |
@@ -503,7 +510,7 @@ DUST balance accrues over time once registered. Initial DUST generation may take
 
 ## 5. Docker Infrastructure — Image Updates
 
-### What Changed
+### What Changed — Docker Images
 
 The wallet-sdk-facade and midnight-js 3.0.0 require updated docker images with GraphQL v3 schema support. The indexer now exposes subscription fields for `zswapLedgerEvents`, `dustLedgerEvents`, and `unshieldedTransactions` that the new wallet SDK depends on for syncing.
 
@@ -586,15 +593,16 @@ The indexer GraphQL endpoint path changed from v1 to v3:
 
 ## 6. Network Configuration
 
-### What Changed
+### What Changed — Network Config
 
 Network configs were updated to use the new GraphQL v3 paths and target the Preview and Preprod networks instead of the old testnet.
 
 ### Network Endpoints
 
 **Local (Standalone):**
+
 | Service | Endpoint |
-|---------|----------|
+| --- | --- |
 | Indexer HTTP | `http://127.0.0.1:8088/api/v3/graphql` |
 | Indexer WS | `ws://127.0.0.1:8088/api/v3/graphql/ws` |
 | Node | `http://127.0.0.1:9944` |
@@ -602,8 +610,9 @@ Network configs were updated to use the new GraphQL v3 paths and target the Prev
 | NetworkId | `undeployed` |
 
 **Preview:**
+
 | Service | Endpoint |
-|---------|----------|
+| --- | --- |
 | RPC Node | `https://rpc.preview.midnight.network` |
 | Indexer HTTP | `https://indexer.preview.midnight.network/api/v3/graphql` |
 | Indexer WS | `wss://indexer.preview.midnight.network/api/v3/graphql/ws` |
@@ -612,8 +621,9 @@ Network configs were updated to use the new GraphQL v3 paths and target the Prev
 | NetworkId | `preview` |
 
 **Preprod:**
+
 | Service | Endpoint |
-|---------|----------|
+| --- | --- |
 | RPC Node | `https://rpc.preprod.midnight.network` |
 | Indexer HTTP | `https://indexer.preprod.midnight.network/api/v3/graphql` |
 | Indexer WS | `wss://indexer.preprod.midnight.network/api/v3/graphql/ws` |
@@ -646,7 +656,7 @@ Quick reference for deploying a DApp to Preprod:
 ### Common Pitfalls
 
 | Pitfall | Resolution |
-|---------|------------|
+| --- | --- |
 | `Failed to clone intent` during deploy | Wallet SDK signing bug — bypass `signRecipe()` with manual signing using correct proof markers (see Section 4) |
 | DUST drops to 0 after failed deploy | Known wallet SDK issue — restart wallet to release pending coins |
 | Wallet shows zero balance after faucet | Ensure you're using `unshieldedToken().raw` (not `nativeToken()`) — see Section 4 |

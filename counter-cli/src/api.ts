@@ -65,10 +65,10 @@ let logger: Logger;
 globalThis.WebSocket = WebSocket;
 
 // Pre-compile the counter contract with ZK circuit assets
-const counterCompiledContract = CompiledContract.make('counter', Counter.Contract).pipe(
-  CompiledContract.withVacantWitnesses,
-  CompiledContract.withCompiledFileAssets(contractConfig.zkConfigPath),
-);
+const counterCompiledContract = CompiledContract.make<CounterContract>(
+  'counter',
+  Counter.Contract<CounterPrivateState>,
+).pipe(CompiledContract.withVacantWitnesses, CompiledContract.withCompiledFileAssets(contractConfig.zkConfigPath));
 
 export interface WalletContext {
   wallet: WalletFacade;
@@ -96,7 +96,7 @@ export const joinContract = async (
   providers: CounterProviders,
   contractAddress: string,
 ): Promise<DeployedCounterContract> => {
-  const counterContract = await findDeployedContract(providers, {
+  const counterContract = await findDeployedContract<CounterContract>(providers, {
     contractAddress,
     compiledContract: counterCompiledContract,
     privateStateId: 'counterPrivateState',
@@ -111,7 +111,7 @@ export const deploy = async (
   privateState: CounterPrivateState,
 ): Promise<DeployedCounterContract> => {
   logger.info('Deploying counter contract...');
-  const counterContract = await deployContract(providers, {
+  const counterContract = await deployContract<CounterContract>(providers, {
     compiledContract: counterCompiledContract,
     privateStateId: 'counterPrivateState',
     initialPrivateState: privateState,
