@@ -61,3 +61,7 @@ jspm_packages/
 
 # Compact
 managed/
+
+# nix
+.direnv
+.nix-bin
