@@ -24,7 +24,7 @@ import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { type FinalizedTxData, type MidnightProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js-types';
-import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
+import { type DefaultConfiguration, WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import { DustWallet } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { HDWallet, Roles, generateRandomSeed } from '@midnight-ntwrk/wallet-sdk-hd';
 import { ShieldedWallet } from '@midnight-ntwrk/wallet-sdk-shielded';
@@ -250,39 +250,6 @@ export const waitForFunds = (wallet: WalletFacade): Promise<bigint> =>
     ),
   );
 
-const buildShieldedConfig = ({ indexer, indexerWS, node, proofServer }: Config) => ({
-  networkId: getNetworkId(),
-  indexerClientConnection: {
-    indexerHttpUrl: indexer,
-    indexerWsUrl: indexerWS,
-  },
-  provingServerUrl: new URL(proofServer),
-  relayURL: new URL(node.replace(/^http/, 'ws')),
-});
-
-const buildUnshieldedConfig = ({ indexer, indexerWS }: Config) => ({
-  networkId: getNetworkId(),
-  indexerClientConnection: {
-    indexerHttpUrl: indexer,
-    indexerWsUrl: indexerWS,
-  },
-  txHistoryStorage: new InMemoryTransactionHistoryStorage(),
-});
-
-const buildDustConfig = ({ indexer, indexerWS, node, proofServer }: Config) => ({
-  networkId: getNetworkId(),
-  costParameters: {
-    additionalFeeOverhead: 300_000_000_000_000n,
-    feeBlocksMargin: 5,
-  },
-  indexerClientConnection: {
-    indexerHttpUrl: indexer,
-    indexerWsUrl: indexerWS,
-  },
-  provingServerUrl: new URL(proofServer),
-  relayURL: new URL(node.replace(/^http/, 'ws')),
-});
-
 /**
  * Derive HD wallet keys for all three roles (Zswap, NightExternal, Dust)
  * from a hex-encoded seed using BIP-44 style derivation at account 0, index 0.
@@ -348,7 +315,7 @@ const registerForDustGeneration = async (
 
   // Check if dust is already available (e.g. from a previous designation)
   if (state.dust.availableCoins.length > 0) {
-    const dustBal = state.dust.walletBalance(new Date());
+    const dustBal = state.dust.balance(new Date());
     console.log(`  ✓ Dust tokens already available (${formatBalance(dustBal)} DUST)`);
     return;
   }
@@ -364,7 +331,7 @@ const registerForDustGeneration = async (
         wallet.state().pipe(
           Rx.throttleTime(5_000),
           Rx.filter((s) => s.isSynced),
-          Rx.filter((s) => s.dust.walletBalance(new Date()) > 0n),
+          Rx.filter((s) => s.dust.balance(new Date()) > 0n),
         ),
       ),
     );
@@ -387,7 +354,7 @@ const registerForDustGeneration = async (
       wallet.state().pipe(
         Rx.throttleTime(5_000),
         Rx.filter((s) => s.isSynced),
-        Rx.filter((s) => s.dust.walletBalance(new Date()) > 0n),
+        Rx.filter((s) => s.dust.balance(new Date()) > 0n),
       ),
     ),
   );
@@ -423,7 +390,7 @@ ${DIV}
   └─ Balance: ${formatBalance(unshieldedBalance)} tNight
 
   Dust
-  └─ Address: ${state.dust.dustAddress}
+  └─ Address: ${state.dust.address}
 
 ${DIV}`);
 };
@@ -451,16 +418,28 @@ export const buildWalletAndWaitForFunds = async (config: Config, seed: string): 
       const dustSecretKey = ledger.DustSecretKey.fromSeed(keys[Roles.Dust]);
       const unshieldedKeystore = createKeystore(keys[Roles.NightExternal], getNetworkId());
 
-      const shieldedWallet = ShieldedWallet(buildShieldedConfig(config)).startWithSecretKeys(shieldedSecretKeys);
-      const unshieldedWallet = UnshieldedWallet(buildUnshieldedConfig(config)).startWithPublicKey(
-        PublicKey.fromKeyStore(unshieldedKeystore),
-      );
-      const dustWallet = DustWallet(buildDustConfig(config)).startWithSecretKey(
-        dustSecretKey,
-        ledger.LedgerParameters.initialParameters().dust,
-      );
+      const configuration: DefaultConfiguration = {
+        networkId: getNetworkId(),
+        indexerClientConnection: {
+          indexerHttpUrl: config.indexer,
+          indexerWsUrl: config.indexerWS,
+        },
+        costParameters: {
+          additionalFeeOverhead: 300_000_000_000_000n,
+          feeBlocksMargin: 5,
+        },
+        relayURL: new URL(config.node.replace(/^http/, 'ws')),
+        txHistoryStorage: new InMemoryTransactionHistoryStorage(),
+        provingServerUrl: new URL(config.proofServer),
+      };
 
-      const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
+      const wallet = await WalletFacade.init({
+        configuration,
+        shielded: (cfg) => ShieldedWallet(cfg).startWithSecretKeys(shieldedSecretKeys),
+        unshielded: (cfg) => UnshieldedWallet(cfg).startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore)),
+        dust: (cfg) =>
+          DustWallet(cfg).startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust),
+      });
       await wallet.start(shieldedSecretKeys, dustSecretKey);
 
       return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore };
@@ -533,7 +512,7 @@ export const getDustBalance = async (
   wallet: WalletFacade,
 ): Promise<{ available: bigint; pending: bigint; availableCoins: number; pendingCoins: number }> => {
   const state = await Rx.firstValueFrom(wallet.state().pipe(Rx.filter((s) => s.isSynced)));
-  const available = state.dust.walletBalance(new Date());
+  const available = state.dust.balance(new Date());
   const availableCoins = state.dust.availableCoins.length;
   const pendingCoins = state.dust.pendingCoins.length;
   // Sum pending coin initial values for a rough pending balance
@@ -562,7 +541,7 @@ export const monitorDustBalance = async (wallet: WalletFacade, stopSignal: Promi
       if (stopped) return;
 
       const now = new Date();
-      const available = state.dust.walletBalance(now);
+      const available = state.dust.balance(now);
       const availableCoins = state.dust.availableCoins.length;
       const pendingCoins = state.dust.pendingCoins.length;
 

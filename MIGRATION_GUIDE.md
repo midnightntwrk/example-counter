@@ -98,17 +98,18 @@ zkir/       — increment.zkir, increment.bzkir (ZK circuit IR)
 
 ---
 
-## 3. JS Dependencies — midnight-js 3.0.0
+## 3. JS Dependencies — midnight-js 3.x
 
 ### What Changed
 
-The midnight-js framework packages were upgraded from `2.0.x` to `3.0.0`. This brings new types from `@midnight-ntwrk/ledger-v7` and a new `CompiledContract` pattern from `@midnight-ntwrk/compact-js`.
+The midnight-js framework packages were upgraded from `2.0.x` to `3.x` (currently `3.1.0`). This brings new types from `@midnight-ntwrk/ledger-v7` and a new `CompiledContract` pattern from `@midnight-ntwrk/compact-js`.
 
 ### Package Updates
 
 ```diff
   "@midnight-ntwrk/compact-runtime": "0.14.0",
-  "@midnight-ntwrk/ledger": "^4.0.0",
+- "@midnight-ntwrk/ledger": "^4.0.0",
++ "@midnight-ntwrk/ledger-v7": "7.0.2",
 - "@midnight-ntwrk/midnight-js-contracts": "2.0.2",
 - "@midnight-ntwrk/midnight-js-http-client-proof-provider": "2.0.2",
 - "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "2.0.2",
@@ -116,13 +117,13 @@ The midnight-js framework packages were upgraded from `2.0.x` to `3.0.0`. This b
 - "@midnight-ntwrk/midnight-js-network-id": "2.0.2",
 - "@midnight-ntwrk/midnight-js-node-zk-config-provider": "2.0.2",
 - "@midnight-ntwrk/midnight-js-types": "2.0.2",
-+ "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
-+ "@midnight-ntwrk/midnight-js-http-client-proof-provider": "3.0.0",
-+ "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "3.0.0",
-+ "@midnight-ntwrk/midnight-js-level-private-state-provider": "3.0.0",
-+ "@midnight-ntwrk/midnight-js-network-id": "3.0.0",
-+ "@midnight-ntwrk/midnight-js-node-zk-config-provider": "3.0.0",
-+ "@midnight-ntwrk/midnight-js-types": "3.0.0",
++ "@midnight-ntwrk/midnight-js-contracts": "3.1.0",
++ "@midnight-ntwrk/midnight-js-http-client-proof-provider": "3.1.0",
++ "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "3.1.0",
++ "@midnight-ntwrk/midnight-js-level-private-state-provider": "3.1.0",
++ "@midnight-ntwrk/midnight-js-network-id": "3.1.0",
++ "@midnight-ntwrk/midnight-js-node-zk-config-provider": "3.1.0",
++ "@midnight-ntwrk/midnight-js-types": "3.1.0",
 ```
 
 ### CompiledContract Pattern
@@ -181,13 +182,15 @@ The monolithic `@midnight-ntwrk/wallet` + `@midnight-ntwrk/wallet-api` packages 
 - "@midnight-ntwrk/wallet": "5.0.0",
 - "@midnight-ntwrk/wallet-api": "5.0.0",
 - "@midnight-ntwrk/zswap": "^4.0.0",
-+ "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
++ "@midnight-ntwrk/wallet-sdk-facade": "2.0.0-rc.1",
 + "@midnight-ntwrk/wallet-sdk-hd": "3.0.0",
-+ "@midnight-ntwrk/wallet-sdk-shielded": "1.0.0",
-+ "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
-+ "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "1.0.0",
++ "@midnight-ntwrk/wallet-sdk-shielded": "2.0.0-rc.1",
++ "@midnight-ntwrk/wallet-sdk-dust-wallet": "2.0.0-rc.1",
++ "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "2.0.0-rc.1",
 + "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0",
 ```
+
+> **Note**: The wallet SDK packages are currently at a release candidate (`2.0.0-rc.1`) as the `2.0.0` stable release is pending. Pin to the exact RC version shown above for compatibility with the latest midnight-js `3.1.0` packages.
 
 ### Architecture
 
@@ -242,16 +245,26 @@ const shieldedSecretKeys = ledger.ZswapSecretKeys.fromSeed(keys[Roles.Zswap]);
 const dustSecretKey = ledger.DustSecretKey.fromSeed(keys[Roles.Dust]);
 const unshieldedKeystore = createKeystore(keys[Roles.NightExternal], getNetworkId());
 
-const shieldedWallet = ShieldedWallet(shieldedConfig).startWithSecretKeys(shieldedSecretKeys);
-const unshieldedWallet = UnshieldedWallet(unshieldedConfig).startWithPublicKey(
-  PublicKey.fromKeyStore(unshieldedKeystore),
-);
-const dustWallet = DustWallet(dustConfig).startWithSecretKey(
-  dustSecretKey,
-  ledger.LedgerParameters.initialParameters().dust,
-);
+const configuration = {
+  networkId: getNetworkId(),
+  indexerClientConnection: { indexerHttpUrl, indexerWsUrl },
+  costParameters: { additionalFeeOverhead: 300_000_000_000_000n, feeBlocksMargin: 5 },
+  relayURL: new URL(node.replace(/^http/, 'ws')),
+  provingServerUrl: new URL(proofServer),
+  txHistoryStorage: new InMemoryTransactionHistoryStorage(),
+};
 
-const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
+const wallet = await WalletFacade.init({
+  configuration,
+  shielded: (cfg) => ShieldedWallet(cfg).startWithSecretKeys(shieldedSecretKeys),
+  unshielded: (cfg) => UnshieldedWallet(cfg).startWithPublicKey(
+    PublicKey.fromKeyStore(unshieldedKeystore),
+  ),
+  dust: (cfg) => DustWallet(cfg).startWithSecretKey(
+    dustSecretKey,
+    ledger.LedgerParameters.initialParameters().dust,
+  ),
+});
 await wallet.start(shieldedSecretKeys, dustSecretKey);
 ```
 
@@ -449,7 +462,7 @@ const shieldedAddr = MidnightBech32m.encode(networkId, new ShieldedAddress(coinP
 const unshieldedAddr = unshieldedKeystore.getBech32Address();
 
 // Dust address (mn_dust_<network>1...)
-const dustAddr = state.dust.dustAddress;
+const dustAddr = state.dust.address;
 ```
 
 **Important**: `UnshieldedKeystore` uses `getBech32Address()` (a method), not `.address` (a property).
