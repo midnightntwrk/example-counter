@@ -15,15 +15,15 @@
 
 import {
   type CircuitContext,
-  QueryContext,
   sampleContractAddress,
-  constructorContext
+  createConstructorContext,
+  createCircuitContext
 } from "@midnight-ntwrk/compact-runtime";
 import {
   Contract,
   type Ledger,
   ledger
-} from "../managed/counter/contract/index.cjs";
+} from "../managed/counter/contract/index.js";
 import { type CounterPrivateState, witnesses } from "../witnesses.js";
 
 // This is over-kill for such a simple contract, but the same pattern can be used to test more
@@ -39,21 +39,18 @@ export class CounterSimulator {
       currentContractState,
       currentZswapLocalState
     } = this.contract.initialState(
-      constructorContext({ privateCounter: 0 }, "0".repeat(64))
+      createConstructorContext({ privateCounter: 0 }, "0".repeat(64))
     );
-    this.circuitContext = {
-      currentPrivateState,
+    this.circuitContext = createCircuitContext(
+      sampleContractAddress(),
       currentZswapLocalState,
-      originalState: currentContractState,
-      transactionContext: new QueryContext(
-        currentContractState.data,
-        sampleContractAddress()
-      )
-    };
+      currentContractState,
+      currentPrivateState
+    );
   }
 
   public getLedger(): Ledger {
-    return ledger(this.circuitContext.transactionContext.state);
+    return ledger(this.circuitContext.currentQueryContext.state);
   }
 
   public getPrivateState(): CounterPrivateState {
@@ -65,6 +62,6 @@ export class CounterSimulator {
     this.circuitContext = this.contract.impureCircuits.increment(
       this.circuitContext
     ).context;
-    return ledger(this.circuitContext.transactionContext.state);
+    return ledger(this.circuitContext.currentQueryContext.state);
   }
 }

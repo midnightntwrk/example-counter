@@ -13,14 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pragma language_version >= 0.20;
+import { createLogger } from './logger-utils.js';
+import { run } from './cli.js';
+import { PreprodConfig } from './config.js';
 
-import CompactStandardLibrary;
-
-// public state
-export ledger round: Counter;
-
-// transition function changing public state
-export circuit increment(): [] {
-  round.increment(1);
-}
+const config = new PreprodConfig();
+const logger = await createLogger(config.logDir);
+await run(config, logger);

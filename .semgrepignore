@@ -1,0 +1,2 @@
+# Local dev environment defaults — not real secrets
+counter-cli/standalone.env.example
