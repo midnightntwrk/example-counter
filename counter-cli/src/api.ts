@@ -464,7 +464,8 @@ export const buildWalletAndWaitForFunds = async (config: Config, seed: string): 
         configuration: walletConfig,
         shielded: (cfg) => ShieldedWallet(cfg).startWithSecretKeys(shieldedSecretKeys),
         unshielded: (cfg) => UnshieldedWallet(cfg).startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore)),
-        dust: (cfg) => DustWallet(cfg).startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust),
+        dust: (cfg) =>
+          DustWallet(cfg).startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust),
       });
       await wallet.start(shieldedSecretKeys, dustSecretKey);
 
