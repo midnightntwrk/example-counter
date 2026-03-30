@@ -7,6 +7,9 @@ updates:
     labels:
       - 'dependencies'
       - 'github-actions'
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -17,7 +20,10 @@ updates:
       - 'dependencies'
       - 'npm'
     versioning-strategy: auto
-      
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+
   - package-ecosystem: "npm"
     directory: "/contract"
     schedule:
@@ -26,6 +32,9 @@ updates:
       - 'dependencies'
       - 'npm'
       - 'contract'
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: "npm"
     directory: "/counter-cli"
@@ -35,3 +44,6 @@ updates:
       - 'dependencies'
       - 'npm'
       - 'counter-cli'
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
