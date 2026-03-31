@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     labels:
       - 'dependencies'
       - 'github-actions'
@@ -15,6 +17,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 30
     labels:
       - 'dependencies'
@@ -28,6 +32,8 @@ updates:
     directory: "/contract"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     labels:
       - 'dependencies'
       - 'npm'
@@ -40,6 +46,8 @@ updates:
     directory: "/counter-cli"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     labels:
       - 'dependencies'
       - 'npm'
