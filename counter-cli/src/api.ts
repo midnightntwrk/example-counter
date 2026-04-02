@@ -19,11 +19,11 @@ import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { Counter, type CounterPrivateState, witnesses } from '@midnight-ntwrk/counter-contract';
 import * as ledger from '@midnight-ntwrk/ledger-v8';
 import { unshieldedToken } from '@midnight-ntwrk/ledger-v8';
-import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
+import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js/contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
-import { type FinalizedTxData, type MidnightProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import { type FinalizedTxData, type MidnightProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import { DustWallet } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { HDWallet, Roles, generateRandomSeed } from '@midnight-ntwrk/wallet-sdk-hd';
@@ -47,8 +47,8 @@ import {
 } from './common-types';
 import { type Config, contractConfig } from './config';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { assertIsContractAddress, toHex } from '@midnight-ntwrk/midnight-js-utils';
-import { getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { assertIsContractAddress, toHex } from '@midnight-ntwrk/midnight-js/utils';
+import { getNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { Buffer } from 'buffer';
 import {
@@ -397,7 +397,7 @@ const registerForDustGeneration = async (
  * Prints a formatted wallet summary to the console, showing all three
  * wallet types (Shielded, Unshielded, Dust) with their addresses and balances.
  */
-const printWalletSummary = (seed: string, state: any, unshieldedKeystore: UnshieldedKeystore) => {
+const printWalletSummary = (state: any, unshieldedKeystore: UnshieldedKeystore) => {
   const networkId = getNetworkId();
   const unshieldedBalance = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
 
@@ -411,8 +411,6 @@ const printWalletSummary = (seed: string, state: any, unshieldedKeystore: Unshie
   console.log(`
 ${DIV}
   Wallet Overview                            Network: ${networkId}
-${DIV}
-  Seed: ${seed}
 ${DIV}
 
   Shielded (ZSwap)
@@ -473,15 +471,13 @@ export const buildWalletAndWaitForFunds = async (config: Config, seed: string): 
     },
   );
 
-  // Show seed and unshielded address immediately so user can fund via faucet while syncing
+  // Show unshielded address immediately so user can fund via faucet while syncing
   const networkId = getNetworkId();
   const DIV = '──────────────────────────────────────────────────────────────';
   console.log(`
 ${DIV}
   Wallet Overview                            Network: ${networkId}
 ${DIV}
-  Seed: ${seed}
-
   Unshielded Address (send tNight here):
   ${unshieldedKeystore.getBech32Address()}
 
@@ -494,7 +490,7 @@ ${DIV}
   const syncedState = await withStatus('Syncing with network', () => waitForSync(wallet));
 
   // Display the full wallet summary with all addresses and balances
-  printWalletSummary(seed, syncedState, unshieldedKeystore);
+  printWalletSummary(syncedState, unshieldedKeystore);
 
   // Check if wallet has funds; if not, wait for incoming tokens
   const balance = syncedState.unshielded.balances[unshieldedToken().raw] ?? 0n;
@@ -509,8 +505,22 @@ ${DIV}
   return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore };
 };
 
-export const buildFreshWallet = async (config: Config): Promise<WalletContext> =>
-  await buildWalletAndWaitForFunds(config, toHex(Buffer.from(generateRandomSeed())));
+/**
+ * Create a fresh wallet with a randomly generated seed. The seed is displayed
+ * once so the user can save it — it will not be shown again.
+ */
+export const buildFreshWallet = async (config: Config): Promise<WalletContext> => {
+  const seed = toHex(Buffer.from(generateRandomSeed()));
+  const DIV = '──────────────────────────────────────────────────────────────';
+  console.log(`
+${DIV}
+  New Wallet Seed — save this before continuing
+${DIV}
+  ${seed}
+${DIV}
+`);
+  return await buildWalletAndWaitForFunds(config, seed);
+};
 
 /**
  * Configure all midnight-js providers needed for contract deployment and interaction.
@@ -520,10 +530,10 @@ export const configureProviders = async (ctx: WalletContext, config: Config) => 
   const walletAndMidnightProvider = await createWalletAndMidnightProvider(ctx);
   const zkConfigProvider = new NodeZkConfigProvider<CounterCircuits>(contractConfig.zkConfigPath);
   // accountId and privateStoragePasswordProvider are required by levelPrivateStateProvider.
-  // The hex coin public key only contains lowercase + digits (2 character classes); '!A'
-  // is appended to satisfy the provider's minimum complexity requirement.
+  // The coin public key is encoded as base64 for the password — base64 output covers all
+  // four character classes and avoids repeated-character runs found in raw hex strings.
   const accountId = walletAndMidnightProvider.getCoinPublicKey();
-  const storagePassword = `${accountId}!A`;
+  const storagePassword = `${Buffer.from(accountId, 'hex').toString('base64')}!`;
   return {
     privateStateProvider: levelPrivateStateProvider<typeof CounterPrivateStateId>({
       privateStateStoreName: contractConfig.privateStateStoreName,

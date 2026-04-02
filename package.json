@@ -1,6 +1,6 @@
 {
   "name": "example-counter",
-  "version": "2.0.2",
+  "version": "2.1.1",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -24,13 +24,11 @@
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "0.15.0",
     "@midnight-ntwrk/ledger-v8": "^8.0.0",
-    "@midnight-ntwrk/midnight-js-contracts": "^4.0.0",
-    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "^4.0.0",
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "^4.0.0",
-    "@midnight-ntwrk/midnight-js-level-private-state-provider": "^4.0.0",
-    "@midnight-ntwrk/midnight-js-network-id": "^4.0.0",
-    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "^4.0.0",
-    "@midnight-ntwrk/midnight-js-types": "^4.0.0",
+    "@midnight-ntwrk/midnight-js": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "^4.0.4",
     "@midnight-ntwrk/wallet-sdk-address-format": "^3.0.0",
     "@midnight-ntwrk/wallet-sdk-dust-wallet": "^3.0.0",
     "@midnight-ntwrk/wallet-sdk-facade": "^3.0.0",
