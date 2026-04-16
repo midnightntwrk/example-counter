@@ -4,34 +4,54 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     labels:
       - 'dependencies'
       - 'github-actions'
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 30
     labels:
       - 'dependencies'
       - 'npm'
     versioning-strategy: auto
-      
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+
   - package-ecosystem: "npm"
     directory: "/contract"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     labels:
       - 'dependencies'
       - 'npm'
       - 'contract'
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: "npm"
     directory: "/counter-cli"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     labels:
       - 'dependencies'
       - 'npm'
       - 'counter-cli'
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]

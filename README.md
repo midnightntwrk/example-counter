@@ -53,7 +53,7 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/r
 source $HOME/.local/bin/env
 
 # Install the toolchain version used by this project
-compact update 0.28.0
+compact update 0.30.0
 
 # Verify
 compact compile --version
@@ -76,6 +76,7 @@ cd contract
 npm run compact
 npm run build
 npm run test
+cd ..
 ```
 
 Expected output from `npm run compact`:
@@ -97,8 +98,6 @@ npm run preprod-ps
 ```
 
 This pulls the proof server Docker image, starts it, and launches the CLI.
-
-> **Mac ARM (Apple Silicon) users**: If the proof server hangs, enable Docker VMM in Docker Desktop: Settings → General → "Virtual Machine Options" → select **Docker VMM**. Restart Docker after changing.
 
 Option B — **manual proof server** (if you prefer to manage it yourself):
 
