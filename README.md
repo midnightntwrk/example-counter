@@ -146,7 +146,7 @@ The CLI uses a headless wallet (separate from browser wallets like Lace).
 ### Step 2: Fund your wallet
 
 1. Copy your **unshielded address** (`mn_addr_preprod1...`) from the output
-2. Visit the [Preprod faucet](https://faucet.preprod.midnight.network)
+2. Visit the [Preprod faucet](https://midnight-tmnight-preprod.nethermind.dev/)
 3. Paste your address and request tNight tokens
 4. The CLI will detect incoming funds automatically
 
@@ -236,7 +236,7 @@ This is useful for:
 
 ## Useful Links
 
-- [Preprod Faucet](https://faucet.preprod.midnight.network) — Get preprod tNight tokens
+- [Preprod Faucet](https://midnight-tmnight-preprod.nethermind.dev/) — Get preprod tNight tokens
 - [Midnight Documentation](https://docs.midnight.network/) — Developer guide
 - [Compact Language Guide](https://docs.midnight.network/compact) — Smart contract language reference
 - [Migration Guide](MIGRATION_GUIDE.md) — Detailed guide for migrating to Preprod with midnight-js 3.0.0 and wallet-sdk-facade 1.0.0
