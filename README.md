@@ -240,3 +240,6 @@ This is useful for:
 - [Midnight Documentation](https://docs.midnight.network/) — Developer guide
 - [Compact Language Guide](https://docs.midnight.network/compact) — Smart contract language reference
 - [Migration Guide](MIGRATION_GUIDE.md) — Detailed guide for migrating to Preprod with midnight-js 3.0.0 and wallet-sdk-facade 1.0.0
+
+> **Windows users:** See [docs/wsl-setup.md](./docs/wsl-setup.md)
+> for a WSL2-specific setup guide.
