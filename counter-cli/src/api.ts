@@ -19,11 +19,11 @@ import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { Counter, type CounterPrivateState, witnesses } from '@midnight-ntwrk/counter-contract';
 import * as ledger from '@midnight-ntwrk/ledger-v8';
 import { unshieldedToken } from '@midnight-ntwrk/ledger-v8';
-import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js/contracts';
+import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
-import { type FinalizedTxData, type MidnightProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js/types';
+import { type FinalizedTxData, type MidnightProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import { DustWallet } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { HDWallet, Roles, generateRandomSeed } from '@midnight-ntwrk/wallet-sdk-hd';
@@ -47,8 +47,8 @@ import {
 } from './common-types';
 import { type Config, contractConfig } from './config';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { assertIsContractAddress, toHex } from '@midnight-ntwrk/midnight-js/utils';
-import { getNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
+import { assertIsContractAddress, toHex } from '@midnight-ntwrk/midnight-js-utils';
+import { getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { Buffer } from 'buffer';
 import {
