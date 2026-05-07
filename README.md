@@ -53,7 +53,7 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/r
 source $HOME/.local/bin/env
 
 # Install the toolchain version used by this project
-compact update 0.30.0
+compact update 0.31.0
 
 # Verify
 compact compile --version
