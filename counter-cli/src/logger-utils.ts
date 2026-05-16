@@ -20,7 +20,13 @@ import pino from 'pino';
 import { createWriteStream } from 'node:fs';
 
 export const createLogger = async (logPath: string): Promise<pino.Logger> => {
-  await fs.mkdir(path.dirname(logPath), { recursive: true });
+  const logDir = path.dirname(logPath);
+  try {
+    await fs.mkdir(logDir, { recursive: true });
+  } catch (error) {
+    console.error(`Failed to create log directory ${logDir}:`, error);
+    throw error;
+  }
   const pretty: pinoPretty.PrettyStream = pinoPretty({
     colorize: true,
     sync: true,
