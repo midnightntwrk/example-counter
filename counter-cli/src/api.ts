@@ -17,13 +17,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { Counter, type CounterPrivateState, witnesses } from '@midnight-ntwrk/counter-contract';
-import * as ledger from '@midnight-ntwrk/ledger-v7';
-import { unshieldedToken } from '@midnight-ntwrk/ledger-v7';
-import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
+import * as ledger from '@midnight-ntwrk/ledger-v8';
+import { unshieldedToken } from '@midnight-ntwrk/ledger-v8';
+import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js/contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
-import { type FinalizedTxData, type MidnightProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js-types';
+import { type FinalizedTxData, type MidnightProvider, type WalletProvider } from '@midnight-ntwrk/midnight-js/types';
 import { WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import { DustWallet } from '@midnight-ntwrk/wallet-sdk-dust-wallet';
 import { HDWallet, Roles, generateRandomSeed } from '@midnight-ntwrk/wallet-sdk-hd';
@@ -41,14 +41,14 @@ import { WebSocket } from 'ws';
 import {
   type CounterCircuits,
   type CounterContract,
-  type CounterPrivateStateId,
+  CounterPrivateStateId,
   type CounterProviders,
   type DeployedCounterContract,
 } from './common-types';
 import { type Config, contractConfig } from './config';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { assertIsContractAddress, toHex } from '@midnight-ntwrk/midnight-js-utils';
-import { getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { assertIsContractAddress, toHex } from '@midnight-ntwrk/midnight-js/utils';
+import { getNetworkId } from '@midnight-ntwrk/midnight-js/network-id';
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { Buffer } from 'buffer';
 import {
@@ -348,7 +348,7 @@ const registerForDustGeneration = async (
 
   // Check if dust is already available (e.g. from a previous designation)
   if (state.dust.availableCoins.length > 0) {
-    const dustBal = state.dust.walletBalance(new Date());
+    const dustBal = state.dust.balance(new Date());
     console.log(`  ✓ Dust tokens already available (${formatBalance(dustBal)} DUST)`);
     return;
   }
@@ -364,7 +364,7 @@ const registerForDustGeneration = async (
         wallet.state().pipe(
           Rx.throttleTime(5_000),
           Rx.filter((s) => s.isSynced),
-          Rx.filter((s) => s.dust.walletBalance(new Date()) > 0n),
+          Rx.filter((s) => s.dust.balance(new Date()) > 0n),
         ),
       ),
     );
@@ -387,7 +387,7 @@ const registerForDustGeneration = async (
       wallet.state().pipe(
         Rx.throttleTime(5_000),
         Rx.filter((s) => s.isSynced),
-        Rx.filter((s) => s.dust.walletBalance(new Date()) > 0n),
+        Rx.filter((s) => s.dust.balance(new Date()) > 0n),
       ),
     ),
   );
@@ -397,7 +397,7 @@ const registerForDustGeneration = async (
  * Prints a formatted wallet summary to the console, showing all three
  * wallet types (Shielded, Unshielded, Dust) with their addresses and balances.
  */
-const printWalletSummary = (seed: string, state: any, unshieldedKeystore: UnshieldedKeystore) => {
+const printWalletSummary = (state: any, unshieldedKeystore: UnshieldedKeystore) => {
   const networkId = getNetworkId();
   const unshieldedBalance = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
 
@@ -412,8 +412,6 @@ const printWalletSummary = (seed: string, state: any, unshieldedKeystore: Unshie
 ${DIV}
   Wallet Overview                            Network: ${networkId}
 ${DIV}
-  Seed: ${seed}
-${DIV}
 
   Shielded (ZSwap)
   └─ Address: ${shieldedAddress}
@@ -423,7 +421,7 @@ ${DIV}
   └─ Balance: ${formatBalance(unshieldedBalance)} tNight
 
   Dust
-  └─ Address: ${state.dust.dustAddress}
+  └─ Address: ${MidnightBech32m.encode(networkId, state.dust.address).toString()}
 
 ${DIV}`);
 };
@@ -451,31 +449,35 @@ export const buildWalletAndWaitForFunds = async (config: Config, seed: string): 
       const dustSecretKey = ledger.DustSecretKey.fromSeed(keys[Roles.Dust]);
       const unshieldedKeystore = createKeystore(keys[Roles.NightExternal], getNetworkId());
 
-      const shieldedWallet = ShieldedWallet(buildShieldedConfig(config)).startWithSecretKeys(shieldedSecretKeys);
-      const unshieldedWallet = UnshieldedWallet(buildUnshieldedConfig(config)).startWithPublicKey(
-        PublicKey.fromKeyStore(unshieldedKeystore),
-      );
-      const dustWallet = DustWallet(buildDustConfig(config)).startWithSecretKey(
-        dustSecretKey,
-        ledger.LedgerParameters.initialParameters().dust,
-      );
-
-      const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
+      // WalletFacade is initialized via a static factory that takes a unified
+      // configuration object and per-wallet factory functions for each sub-wallet
+      // (shielded, unshielded, dust). The three config builders are spread into
+      // one object to satisfy the unified configuration shape.
+      const walletConfig = {
+        ...buildShieldedConfig(config),
+        ...buildUnshieldedConfig(config),
+        ...buildDustConfig(config),
+      };
+      const wallet = await WalletFacade.init({
+        configuration: walletConfig,
+        shielded: (cfg) => ShieldedWallet(cfg).startWithSecretKeys(shieldedSecretKeys),
+        unshielded: (cfg) => UnshieldedWallet(cfg).startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore)),
+        dust: (cfg) =>
+          DustWallet(cfg).startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust),
+      });
       await wallet.start(shieldedSecretKeys, dustSecretKey);
 
       return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore };
     },
   );
 
-  // Show seed and unshielded address immediately so user can fund via faucet while syncing
+  // Show unshielded address immediately so user can fund via faucet while syncing
   const networkId = getNetworkId();
   const DIV = '──────────────────────────────────────────────────────────────';
   console.log(`
 ${DIV}
   Wallet Overview                            Network: ${networkId}
 ${DIV}
-  Seed: ${seed}
-
   Unshielded Address (send tNight here):
   ${unshieldedKeystore.getBech32Address()}
 
@@ -488,7 +490,7 @@ ${DIV}
   const syncedState = await withStatus('Syncing with network', () => waitForSync(wallet));
 
   // Display the full wallet summary with all addresses and balances
-  printWalletSummary(seed, syncedState, unshieldedKeystore);
+  printWalletSummary(syncedState, unshieldedKeystore);
 
   // Check if wallet has funds; if not, wait for incoming tokens
   const balance = syncedState.unshielded.balances[unshieldedToken().raw] ?? 0n;
@@ -503,8 +505,22 @@ ${DIV}
   return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore };
 };
 
-export const buildFreshWallet = async (config: Config): Promise<WalletContext> =>
-  await buildWalletAndWaitForFunds(config, toHex(Buffer.from(generateRandomSeed())));
+/**
+ * Create a fresh wallet with a randomly generated seed. The seed is displayed
+ * once so the user can save it — it will not be shown again.
+ */
+export const buildFreshWallet = async (config: Config): Promise<WalletContext> => {
+  const seed = toHex(Buffer.from(generateRandomSeed()));
+  const DIV = '──────────────────────────────────────────────────────────────';
+  console.log(`
+${DIV}
+  New Wallet Seed — save this before continuing
+${DIV}
+  ${seed}
+${DIV}
+`);
+  return await buildWalletAndWaitForFunds(config, seed);
+};
 
 /**
  * Configure all midnight-js providers needed for contract deployment and interaction.
@@ -513,10 +529,16 @@ export const buildFreshWallet = async (config: Config): Promise<WalletContext> =
 export const configureProviders = async (ctx: WalletContext, config: Config) => {
   const walletAndMidnightProvider = await createWalletAndMidnightProvider(ctx);
   const zkConfigProvider = new NodeZkConfigProvider<CounterCircuits>(contractConfig.zkConfigPath);
+  // accountId and privateStoragePasswordProvider are required by levelPrivateStateProvider.
+  // The coin public key is encoded as base64 for the password — base64 output covers all
+  // four character classes and avoids repeated-character runs found in raw hex strings.
+  const accountId = walletAndMidnightProvider.getCoinPublicKey();
+  const storagePassword = `${Buffer.from(accountId, 'hex').toString('base64')}!`;
   return {
     privateStateProvider: levelPrivateStateProvider<typeof CounterPrivateStateId>({
       privateStateStoreName: contractConfig.privateStateStoreName,
-      walletProvider: walletAndMidnightProvider,
+      accountId,
+      privateStoragePasswordProvider: () => storagePassword,
     }),
     publicDataProvider: indexerPublicDataProvider(config.indexer, config.indexerWS),
     zkConfigProvider,
@@ -533,7 +555,7 @@ export const getDustBalance = async (
   wallet: WalletFacade,
 ): Promise<{ available: bigint; pending: bigint; availableCoins: number; pendingCoins: number }> => {
   const state = await Rx.firstValueFrom(wallet.state().pipe(Rx.filter((s) => s.isSynced)));
-  const available = state.dust.walletBalance(new Date());
+  const available = state.dust.balance(new Date());
   const availableCoins = state.dust.availableCoins.length;
   const pendingCoins = state.dust.pendingCoins.length;
   // Sum pending coin initial values for a rough pending balance
@@ -562,7 +584,7 @@ export const monitorDustBalance = async (wallet: WalletFacade, stopSignal: Promi
       if (stopped) return;
 
       const now = new Date();
-      const available = state.dust.walletBalance(now);
+      const available = state.dust.balance(now);
       const availableCoins = state.dust.availableCoins.length;
       const pendingCoins = state.dust.pendingCoins.length;
 

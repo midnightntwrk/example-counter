@@ -24,7 +24,7 @@ import {
 import path from 'path';
 import * as api from '../api';
 import * as Rx from 'rxjs';
-import { unshieldedToken } from '@midnight-ntwrk/ledger-v7';
+import { unshieldedToken } from '@midnight-ntwrk/ledger-v8';
 import type { Logger } from 'pino';
 import type { WalletContext } from '../api';
 import { expect } from 'vitest';
@@ -164,7 +164,7 @@ export class TestEnvironment {
   };
 
   static getProofServerContainer = async (_env: string) =>
-    await new GenericContainer('midnightnetwork/proof-server:latest')
+    await new GenericContainer('midnightntwrk/proof-server:latest')
       .withExposedPorts(6300)
       .withCommand(['midnight-proof-server -v'])
       .withEnvironment({ RUST_BACKTRACE: 'full' })

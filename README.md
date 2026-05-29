@@ -1,5 +1,7 @@
 # Counter DApp
 
+This project is built on the [Midnight Network](https://midnight.network/).
+
 [![Generic badge](https://img.shields.io/badge/Compact%20Toolchain-0.28.0-1abc9c.svg)](https://shields.io/) [![Generic badge](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://shields.io/)
 
 A Midnight smart contract example demonstrating a simple on-chain counter. The counter uses public ledger state and serves as a starting point for building Midnight DApps.
@@ -11,6 +13,12 @@ Supports three network targets:
 | **Preprod** | Public testnet (recommended for getting started) | `npm run preprod-ps` |
 | **Preview** | Public preview testnet | `npm run preview-ps` |
 | **Standalone** | Fully local (node + indexer + proof server via Docker) | `npm run standalone` |
+
+
+> **Use this repo as a template. Do not fork it.**
+>  
+> This repository is intended to be used via GitHub’s “Use this template” flow.  
+> Forking this repo is discouraged, as forks are not tracked as independent projects.
 
 ## Project Structure
 
@@ -45,7 +53,7 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/r
 source $HOME/.local/bin/env
 
 # Install the toolchain version used by this project
-compact update 0.28.0
+compact update 0.30.0
 
 # Verify
 compact compile --version
@@ -68,6 +76,7 @@ cd contract
 npm run compact
 npm run build
 npm run test
+cd ..
 ```
 
 Expected output from `npm run compact`:
@@ -89,8 +98,6 @@ npm run preprod-ps
 ```
 
 This pulls the proof server Docker image, starts it, and launches the CLI.
-
-> **Mac ARM (Apple Silicon) users**: If the proof server hangs, enable Docker VMM in Docker Desktop: Settings → General → "Virtual Machine Options" → select **Docker VMM**. Restart Docker after changing.
 
 Option B — **manual proof server** (if you prefer to manage it yourself):
 
