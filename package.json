@@ -31,7 +31,7 @@
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "^4.0.4",
     "@midnight-ntwrk/wallet-sdk-address-format": "^3.0.0",
     "@midnight-ntwrk/wallet-sdk-dust-wallet": "^3.0.0",
-    "@midnight-ntwrk/wallet-sdk-facade": "^3.0.0",
+    "@midnight-ntwrk/wallet-sdk-facade": "^4.0.0",
     "@midnight-ntwrk/wallet-sdk-hd": "^3.0.0",
     "@midnight-ntwrk/wallet-sdk-shielded": "^2.0.0",
     "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "^2.0.0",
