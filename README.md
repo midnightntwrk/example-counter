@@ -27,11 +27,14 @@ example-counter/
 ├── contract/                          # Smart contract (Compact language)
 │   ├── src/counter.compact            # The counter smart contract
 │   └── src/test/                      # Contract unit tests
-└── counter-cli/                       # Command-line interface
-    ├── src/                           # CLI implementation
-    ├── proof-server.yml               # Proof server Docker config (preprod/preview)
-    ├── standalone.yml                 # Full local stack Docker config
-    └── standalone.env.example         # Default env vars for standalone mode
+├── counter-cli/                       # Command-line interface
+│   ├── src/                           # CLI implementation
+│   ├── proof-server.yml               # Proof server Docker config (preprod/preview)
+│   ├── standalone.yml                 # Full local stack Docker config
+│   └── standalone.env.example         # Default env vars for standalone mode
+└── counter-ui/                        # Next.js frontend for the counter contract
+    ├── src/                           # UI implementation
+    └── README.md                      # UI setup instructions
 ```
 
 ## Prerequisites
@@ -240,3 +243,59 @@ This is useful for:
 - [Midnight Documentation](https://docs.midnight.network/) — Developer guide
 - [Compact Language Guide](https://docs.midnight.network/compact) — Smart contract language reference
 - [Migration Guide](MIGRATION_GUIDE.md) — Detailed guide for migrating to Preprod with midnight-js 3.0.0 and wallet-sdk-facade 1.0.0
+
+## Counter UI
+
+The UI calls the counter CLI in-process to read and increment the on-chain value.
+You will need a wallet seed and a deployed contract address first (see the CLI
+flow above).
+
+### 1. Build the contract (one time)
+
+```bash
+cd contract
+npm run compact
+npm run build
+cd ..
+```
+
+### 2. Deploy or join a counter contract
+
+Use the CLI to deploy or join so you have a contract address and wallet seed:
+
+```bash
+cd counter-cli
+npm run preprod-ps
+```
+
+Save the wallet seed and the contract address shown by the CLI.
+
+### 3. Start the proof server (preprod/preview)
+
+```bash
+cd counter-cli
+docker compose -f proof-server.yml up
+```
+
+### 4. Start the UI
+
+```bash
+cd counter-ui
+export COUNTER_NETWORK=preprod
+export COUNTER_WALLET_SEED='<your-wallet-seed>'
+export COUNTER_CONTRACT_ADDRESS='<your-contract-address>'
+npm install
+npm install
+npm run dev
+```
+
+### 5. Interact with the UI
+
+Open `http://localhost:3000` and you can:
+
+- Click **Increment Counter** to submit a transaction and update the ledger value.
+- Click **Refresh** to pull the latest on-chain value without incrementing.
+- View the recent increment history and transaction IDs.
+
+If the UI shows an error, verify the proof server is running and the environment
+variables are set in the same terminal where you ran `npm run dev`.
