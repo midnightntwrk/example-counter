@@ -1,0 +1,22 @@
+name: Add to DevRel PR/Issue Tracker
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request:
+    types: [opened, reopened]
+
+permissions: {}
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: actions/add-to-project@5afcf98fcd03f1c2f92c3c83f58ae24323cc57fd # v2.0.0
+        if: ${{ secrets.DEVREL_TRACKER_TOKEN != '' }}
+        with:
+          project-url: https://github.com/orgs/midnightntwrk/projects/75
+          github-token: ${{ secrets.DEVREL_TRACKER_TOKEN }}
