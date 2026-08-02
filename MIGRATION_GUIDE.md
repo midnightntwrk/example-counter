@@ -604,7 +604,7 @@ Network configs were updated to use the new GraphQL v3 paths and target the Prev
 | RPC Node | `https://rpc.preprod.midnight.network` |
 | Indexer HTTP | `https://indexer.preprod.midnight.network/api/v3/graphql` |
 | Indexer WS | `wss://indexer.preprod.midnight.network/api/v3/graphql/ws` |
-| Faucet | `https://faucet.preprod.midnight.network` |
+| Faucet | `https://midnight-tmnight-preprod.nethermind.dev/` |
 | Proof Server | `http://localhost:6300` (local) |
 | NetworkId | `preprod` |
 
@@ -626,7 +626,7 @@ Quick reference for deploying a DApp to Preprod:
 
 1. **Proof server**: Run locally via Docker (`docker compose -f proof-server.yml up`)
 2. **Wallet**: Create or restore from seed — the app connects to remote Preprod indexer and RPC
-3. **Fund wallet**: Send tNight to the **unshielded** address via [https://faucet.preprod.midnight.network](https://faucet.preprod.midnight.network)
+3. **Fund wallet**: Send tNight to the **unshielded** address via [https://midnight-tmnight-preprod.nethermind.dev/](https://midnight-tmnight-preprod.nethermind.dev/)
 4. **Wait for DUST**: After funding, NIGHT UTXOs are registered for dust generation automatically. Wait for DUST to accrue before deploying.
 5. **Deploy contract**: Once DUST balance is non-zero, deploy your contract through the DApp
 
