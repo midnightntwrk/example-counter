@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.1.1]
 
 ### Changed
+- Bumped `@midnight-ntwrk/compact-runtime` to `0.16.0` to match the runtime version emitted by the current stable Compact toolchain
+- Updated CI `compact-version` to `0.31.1` and README toolchain instructions to `0.31.1` to match `compact-runtime` `0.16.0`
 - Migrated to the `@midnight-ntwrk/midnight-js` barrel package for cleaner imports
 - Bumped all `@midnight-ntwrk/midnight-js-*` packages to `^4.0.4`
 - Node.js runtime warnings suppressed in all CLI scripts with `--no-warnings`
