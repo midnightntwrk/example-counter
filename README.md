@@ -1,3 +1,10 @@
+> [!WARNING]
+> **This repository is archived and no longer maintained.**
+>
+> `example-counter` was Midnight's original starter example. It was too simple to teach much beyond "a contract exists," so we've replaced it with the leaderboard example: same basics, in a project worth finishing, with a step-by-step guide to rebuild it from scratch.
+>
+> New to Midnight? Start with the [leaderboard tutorial](https://docs.midnight.network/tutorials/leaderboard), then explore the [source repo](https://github.com/midnightntwrk/midnight-leaderboard). This repo is read-only and will not be updated for future SDK releases.
+
 # Counter DApp
 
 This project is built on the [Midnight Network](https://midnight.network/).
