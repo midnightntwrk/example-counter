@@ -19,8 +19,8 @@
     "compact": "compact compile src/counter.compact src/managed/counter",
     "test": "vitest run",
     "test:compile": "npm run compact && vitest run",
-    "build": "rm -rf dist && tsc --project tsconfig.build.json && cp -Rf ./src/managed ./dist/managed && cp ./src/counter.compact ./dist",
+    "build": "rm -rf dist && npm run tsc --project tsconfig.build.json && cp -Rf ./src/managed ./dist/managed && cp ./src/counter.compact ./dist",
     "lint": "eslint src",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "npm run tsc -p tsconfig.json --noEmit"
   }
 }
