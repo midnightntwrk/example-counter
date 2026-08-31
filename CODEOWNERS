@@ -1,4 +1,4 @@
-* @midnightntwrk/mn-devrel @midnightntwrk/mn-qa
+* @midnightntwrk/mn-devrel
 /.github/ISSUE_TEMPLATE/ @midnightntwrk/mn-security @midnightntwrk/mn-sre
 /.github/PULL_REQUEST_TEMPLATE/ @midnightntwrk/mn-security @midnightntwrk/mn-sre
 /.github/workflows/scan.yml @midnightntwrk/mn-security @midnightntwrk/mn-sre
