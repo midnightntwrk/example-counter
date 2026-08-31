@@ -7,6 +7,9 @@
     "counter-cli",
     "contract"
   ],
+  "scripts": {
+    "check-env": "npx tsx scripts/check-env.ts"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.5.0",
