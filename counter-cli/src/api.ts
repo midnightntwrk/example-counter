@@ -482,7 +482,7 @@ ${DIV}
   ${unshieldedKeystore.getBech32Address()}
 
   Fund your wallet with tNight from the Preprod faucet:
-  https://faucet.preprod.midnight.network/
+  https://midnight-tmnight-preprod.nethermind.dev/
 ${DIV}
 `);
 
